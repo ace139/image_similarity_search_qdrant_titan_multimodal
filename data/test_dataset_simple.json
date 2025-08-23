@@ -1,0 +1,91 @@
+{
+  "dataset_info": {
+    "name": "Simplified Food Test Dataset",
+    "description": "Simple test dataset for image similarity search",
+    "total_users": 3,
+    "note": "Simplified structure for testing purposes"
+  },
+  "users": {
+    "user1": {
+      "name": "Alice Chen",
+      "profile": "Health-conscious professional",
+      "meals": {
+        "breakfast": {
+          "meal_time": "07:30",
+          "tags": ["oatmeal", "berries", "healthy"],
+          "protein_grams": 12,
+          "calories": 350,
+          "notes": "Steel-cut oats with fresh blueberries"
+        },
+        "lunch": {
+          "meal_time": "12:15",
+          "tags": ["quinoa", "salad", "vegetables"],
+          "protein_grams": 18,
+          "calories": 420,
+          "notes": "Rainbow quinoa salad with roasted vegetables"
+        },
+        "dinner": {
+          "meal_time": "19:00",
+          "tags": ["tofu", "stir-fry", "asian"],
+          "protein_grams": 25,
+          "calories": 380,
+          "notes": "Teriyaki tofu with broccoli and bell peppers"
+        }
+      }
+    },
+    "user2": {
+      "name": "Marcus Johnson",
+      "profile": "Athletic trainer",
+      "meals": {
+        "breakfast": {
+          "meal_time": "06:45",
+          "tags": ["eggs", "bacon", "protein"],
+          "protein_grams": 35,
+          "calories": 520,
+          "notes": "Three-egg scramble with turkey bacon"
+        },
+        "lunch": {
+          "meal_time": "13:30",
+          "tags": ["chicken", "sweet-potato", "post-workout"],
+          "protein_grams": 45,
+          "calories": 580,
+          "notes": "Grilled chicken with roasted sweet potato"
+        },
+        "dinner": {
+          "meal_time": "18:45",
+          "tags": ["salmon", "omega-3", "roasted"],
+          "protein_grams": 40,
+          "calories": 650,
+          "notes": "Pan-seared salmon with roasted Brussels sprouts"
+        }
+      }
+    },
+    "user3": {
+      "name": "Sofia Martinez",
+      "profile": "Busy mom",
+      "meals": {
+        "breakfast": {
+          "meal_time": "07:15",
+          "tags": ["cereal", "quick", "family"],
+          "protein_grams": 8,
+          "calories": 320,
+          "notes": "Quick breakfast cereal with milk"
+        },
+        "lunch": {
+          "meal_time": "12:30",
+          "tags": ["sandwich", "pbj", "kids"],
+          "protein_grams": 12,
+          "calories": 380,
+          "notes": "PB&J sandwich with apple slices"
+        },
+        "dinner": {
+          "meal_time": "18:30",
+          "tags": ["spaghetti", "meatballs", "family"],
+          "protein_grams": 28,
+          "calories": 620,
+          "notes": "Family dinner: Spaghetti and meatballs"
+        }
+      }
+    }
+  }
+}

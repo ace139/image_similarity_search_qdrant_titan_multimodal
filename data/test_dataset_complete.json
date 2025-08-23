@@ -1,0 +1,538 @@
+{
+  "dataset_info": {
+    "name": "Complete Food Test Dataset - 5 Users x 7 Days",
+    "description": "Complete test dataset for image similarity search with all 5 users over 7 days each",
+    "total_users": 5,
+    "days_per_user": 7,
+    "meals_per_day": 3,
+    "total_images": 105,
+    "note": "Complete structure matching the original dataset for testing purposes"
+  },
+  "users": {
+    "user1": {
+      "name": "Alice Chen",
+      "profile": "Health-conscious professional (mostly healthy, occasional indulgences)",
+      "dietary_preferences": ["vegetarian", "flexitarian"],
+      "days": {
+        "monday": {
+          "breakfast": {
+            "meal_time": "07:30",
+            "notes": "Steel-cut oats with fresh blueberries and almonds"
+          },
+          "lunch": {
+            "meal_time": "12:15",
+            "notes": "Rainbow quinoa salad with roasted vegetables"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Teriyaki tofu with broccoli and bell peppers"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "meal_time": "07:45",
+            "notes": "Green smoothie bowl with spinach, banana, and chia seeds"
+          },
+          "lunch": {
+            "meal_time": "12:30",
+            "notes": "Black bean burger with sweet potato fries (cheat meal)"
+          },
+          "dinner": {
+            "meal_time": "19:15",
+            "notes": "Fresh caprese salad with basil and balsamic drizzle"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "meal_time": "07:30",
+            "notes": "Overnight chia pudding with mango and coconut"
+          },
+          "lunch": {
+            "meal_time": "12:00",
+            "notes": "Buddha bowl with roasted veggies and tahini dressing"
+          },
+          "dinner": {
+            "meal_time": "19:30",
+            "notes": "Coconut vegetable curry with jasmine rice"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "meal_time": "07:40",
+            "notes": "Acai bowl with granola, berries, and honey"
+          },
+          "lunch": {
+            "meal_time": "12:45",
+            "notes": "Comfort food day: grilled cheese with tomato soup"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Bell peppers stuffed with quinoa and vegetables"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "meal_time": "08:30",
+            "notes": "Friday treat: French toast with berries and maple syrup"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Mediterranean wrap with hummus, feta, and vegetables"
+          },
+          "dinner": {
+            "meal_time": "20:00",
+            "notes": "Friday night pizza: Margherita with fresh basil"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "meal_time": "09:00",
+            "notes": "Weekend indulgence: Blueberry pancakes with butter and syrup"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Instagram-worthy avocado toast with poached egg"
+          },
+          "dinner": {
+            "meal_time": "19:30",
+            "notes": "Eggplant parmesan with angel hair pasta"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "meal_time": "10:00",
+            "notes": "Sunday brunch: Eggs Benedict with spinach"
+          },
+          "lunch": {
+            "meal_time": "14:00",
+            "notes": "Greek salad with feta, olives, and cucumber"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Classic French ratatouille with herbs"
+          }
+        }
+      }
+    },
+    "user2": {
+      "name": "Marcus Johnson",
+      "profile": "Athletic trainer (high-protein focus, occasional fast food)",
+      "dietary_preferences": ["high-protein", "flexible"],
+      "days": {
+        "monday": {
+          "breakfast": {
+            "meal_time": "06:45",
+            "notes": "Three-egg scramble with turkey bacon and avocado"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Grilled chicken with roasted sweet potato and asparagus"
+          },
+          "dinner": {
+            "meal_time": "18:45",
+            "notes": "Pan-seared salmon with roasted Brussels sprouts"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "meal_time": "07:00",
+            "notes": "Protein smoothie with banana, peanut butter, and whey"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Turkey and avocado sandwich on whole grain bread"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Lean beef stir-fry with vegetables over brown rice"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "meal_time": "06:50",
+            "notes": "Greek yogurt with granola and protein powder"
+          },
+          "lunch": {
+            "meal_time": "13:15",
+            "notes": "Tuna salad with whole wheat crackers and vegetables"
+          },
+          "dinner": {
+            "meal_time": "19:15",
+            "notes": "Grilled pork tenderloin with quinoa and steamed broccoli"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "meal_time": "06:45",
+            "notes": "Egg white omelet with spinach, peppers, and mushrooms"
+          },
+          "lunch": {
+            "meal_time": "13:45",
+            "notes": "Cheat meal: Big Mac, large fries, and Coke"
+          },
+          "dinner": {
+            "meal_time": "18:30",
+            "notes": "Light dinner after cheat lunch: Grilled chicken salad"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "meal_time": "07:30",
+            "notes": "Protein pancakes with banana and sugar-free syrup"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Chipotle chicken burrito bowl with brown rice"
+          },
+          "dinner": {
+            "meal_time": "20:30",
+            "notes": "Friday night: Pepperoni pizza and beer with friends"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "meal_time": "09:00",
+            "notes": "Weekend diner breakfast: Bacon, eggs, and hash browns"
+          },
+          "lunch": {
+            "meal_time": "14:00",
+            "notes": "Quick lunch: Subway turkey sandwich with chips"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Weekend BBQ: Ribs with coleslaw and baked beans"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "meal_time": "10:30",
+            "notes": "Sunday brunch: Steak and eggs with home fries"
+          },
+          "lunch": {
+            "meal_time": "15:00",
+            "notes": "Light lunch: Protein shake with almond milk"
+          },
+          "dinner": {
+            "meal_time": "18:00",
+            "notes": "Meal prep start: Grilled fish with roasted vegetables"
+          }
+        }
+      }
+    },
+    "user3": {
+      "name": "Sofia Martinez",
+      "profile": "Busy mom (family meals, quick fixes, occasional takeout)",
+      "dietary_preferences": ["family-friendly", "mediterranean", "practical"],
+      "days": {
+        "monday": {
+          "breakfast": {
+            "meal_time": "07:15",
+            "notes": "Quick breakfast: Whole grain cereal with milk"
+          },
+          "lunch": {
+            "meal_time": "12:30",
+            "notes": "Simple lunch: PB&J sandwich with apple slices"
+          },
+          "dinner": {
+            "meal_time": "18:30",
+            "notes": "Family dinner: Spaghetti and meatballs with garlic bread"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "meal_time": "07:30",
+            "notes": "Rushed morning: Toast with jam and coffee"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Greek salad with feta, olives, and pita bread"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Easy dinner: Chicken nuggets and fries (kids' favorite)"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "meal_time": "07:20",
+            "notes": "Greek yogurt with honey and granola"
+          },
+          "lunch": {
+            "meal_time": "12:45",
+            "notes": "Quick quesadilla with cheese and salsa"
+          },
+          "dinner": {
+            "meal_time": "18:45",
+            "notes": "Taco Tuesday: Ground beef tacos with all the fixings"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "meal_time": "07:45",
+            "notes": "Rushed morning: Blueberry muffin and coffee"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Busy day: Grabbed pizza slice for lunch"
+          },
+          "dinner": {
+            "meal_time": "19:30",
+            "notes": "Easy dinner: Frozen lasagna with side salad"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "meal_time": "08:00",
+            "notes": "Friday treat: Pancakes with syrup for the family"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Kids wanted McDonald's: Happy Meal and Big Mac"
+          },
+          "dinner": {
+            "meal_time": "20:00",
+            "notes": "Friday night: Domino's pizza delivery"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "meal_time": "09:30",
+            "notes": "Weekend family breakfast: French toast with bacon"
+          },
+          "lunch": {
+            "meal_time": "14:00",
+            "notes": "Lunch out: Chicken Caesar salad"
+          },
+          "dinner": {
+            "meal_time": "19:15",
+            "notes": "Saturday night: Pasta arrabiata with parmesan"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "meal_time": "10:00",
+            "notes": "Sunday brunch: Everything bagel with lox and cream cheese"
+          },
+          "lunch": {
+            "meal_time": "14:30",
+            "notes": "Mediterranean wrap with hummus and vegetables"
+          },
+          "dinner": {
+            "meal_time": "18:00",
+            "notes": "Sunday family dinner: Roasted chicken with vegetables"
+          }
+        }
+      }
+    },
+    "user4": {
+      "name": "David Kim",
+      "profile": "College student (budget meals, dorm food, occasional splurges)",
+      "dietary_preferences": ["budget-friendly", "asian-fusion", "convenient"],
+      "days": {
+        "monday": {
+          "breakfast": {
+            "meal_time": "09:30",
+            "notes": "Dorm breakfast: Instant ramen with a cracked egg"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Campus lunch: Cafeteria pizza and chocolate milk"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Korean restaurant: Bibimbap with marinated beef"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "meal_time": "10:00",
+            "notes": "Quick dorm breakfast: Cereal with milk"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Quick lunch: Taco Bell burrito and nachos"
+          },
+          "dinner": {
+            "meal_time": "20:00",
+            "notes": "Dorm dinner: Box mac and cheese with hot dogs"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "meal_time": "09:45",
+            "notes": "Rushed morning: Pop-Tarts and instant coffee"
+          },
+          "lunch": {
+            "meal_time": "14:00",
+            "notes": "Vietnamese pho with beef and fresh herbs"
+          },
+          "dinner": {
+            "meal_time": "21:00",
+            "notes": "Late night: Frozen pizza heated in dorm oven"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "meal_time": "08:30",
+            "notes": "Running late: Protein bar and coffee"
+          },
+          "lunch": {
+            "meal_time": "13:15",
+            "notes": "Chinese takeout: Orange chicken with fried rice"
+          },
+          "dinner": {
+            "meal_time": "22:30",
+            "notes": "Late night study fuel: Cup noodles"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "meal_time": "09:00",
+            "notes": "Grabbed gas station breakfast burrito"
+          },
+          "lunch": {
+            "meal_time": "13:45",
+            "notes": "Friday campus lunch: Cheeseburger and fries"
+          },
+          "dinner": {
+            "meal_time": "20:30",
+            "notes": "Friday night out: Korean BBQ with friends"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "meal_time": "11:30",
+            "notes": "Weekend recovery: IHOP pancakes and bacon"
+          },
+          "lunch": {
+            "meal_time": "15:00",
+            "notes": "Chipotle chicken bowl (with student discount)"
+          },
+          "dinner": {
+            "meal_time": "21:00",
+            "notes": "Saturday night: Domino's pizza with roommates"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "meal_time": "10:30",
+            "notes": "Comfort food: Rice congee (feeling homesick)"
+          },
+          "lunch": {
+            "meal_time": "14:30",
+            "notes": "Sunday treat: Authentic ramen with pork and egg"
+          },
+          "dinner": {
+            "meal_time": "19:00",
+            "notes": "Sunday leftovers: Yesterday's fried rice reheated"
+          }
+        }
+      }
+    },
+    "user5": {
+      "name": "Emma Thompson",
+      "profile": "Foodie and weekend cook (gourmet experiments, occasional indulgences)",
+      "dietary_preferences": ["gourmet", "seasonal", "experimental"],
+      "days": {
+        "monday": {
+          "breakfast": {
+            "meal_time": "08:30",
+            "notes": "Sourdough avocado toast with perfectly poached egg"
+          },
+          "lunch": {
+            "meal_time": "12:45",
+            "notes": "Instagram-worthy Buddha bowl with tahini dressing"
+          },
+          "dinner": {
+            "meal_time": "20:00",
+            "notes": "Pan-seared duck breast with cherry gastrique"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "meal_time": "08:45",
+            "notes": "Acai bowl with bee pollen, cacao nibs, and coconut"
+          },
+          "lunch": {
+            "meal_time": "13:00",
+            "notes": "Burrata with heirloom tomatoes and basil oil"
+          },
+          "dinner": {
+            "meal_time": "19:30",
+            "notes": "Miso-glazed salmon with edamame and pickled vegetables"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "meal_time": "08:20",
+            "notes": "Shakshuka with farm eggs and crusty bread"
+          },
+          "lunch": {
+            "meal_time": "12:30",
+            "notes": "Ahi tuna poke bowl with brown rice and seaweed"
+          },
+          "dinner": {
+            "meal_time": "20:15",
+            "notes": "Truffle pasta with wild mushrooms and parmesan"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "meal_time": "09:00",
+            "notes": "Indulgent morning: Buttery croissant with apricot jam"
+          },
+          "lunch": {
+            "meal_time": "13:30",
+            "notes": "Guilty pleasure: In-N-Out animal style burger and fries"
+          },
+          "dinner": {
+            "meal_time": "19:45",
+            "notes": "Healing soup: Bone broth with herbs and vegetables"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "meal_time": "08:15",
+            "notes": "Brioche French toast with vanilla bean and strawberries"
+          },
+          "lunch": {
+            "meal_time": "13:15",
+            "notes": "Lobster roll with truffle fries (splurge lunch)"
+          },
+          "dinner": {
+            "meal_time": "21:00",
+            "notes": "Friday night: Wine bar with charcuterie board"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "meal_time": "10:00",
+            "notes": "Weekend experiment: Matcha pancakes with honey butter"
+          },
+          "lunch": {
+            "meal_time": "14:30",
+            "notes": "Farmers market finds: Heirloom tomato and burrata salad"
+          },
+          "dinner": {
+            "meal_time": "20:30",
+            "notes": "Date night: Wagyu steak with roasted vegetables"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "meal_time": "11:00",
+            "notes": "Leisurely brunch: Eggs Benedict with smoked salmon"
+          },
+          "lunch": {
+            "meal_time": "15:00",
+            "notes": "Light lunch: Gazpacho with herb oil and croutons"
+          },
+          "dinner": {
+            "meal_time": "19:30",
+            "notes": "Sunday prep: Slow-braised short ribs with polenta"
+          }
+        }
+      }
+    }
+  }
+}

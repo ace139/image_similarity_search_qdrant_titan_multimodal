@@ -1,0 +1,963 @@
+{
+  "dataset_info": {
+    "name": "Food Plate Test Dataset - 7 Days",
+    "description": "Realistic test dataset for image similarity search with 5 users over 7 days each",
+    "total_users": 5,
+    "days_per_user": 7,
+    "meals_per_day": 3,
+    "total_images": 105,
+    "note": "Includes diverse, realistic meals - healthy, fast food, comfort food, and unhealthy options"
+  },
+  "users": {
+    "user1": {
+      "name": "Alice Chen",
+      "profile": "Health-conscious professional (mostly healthy, occasional indulgences)",
+      "dietary_preferences": ["vegetarian", "flexitarian"],
+      "week_meals": {
+        "monday": {
+        "breakfast": {
+          "meal_time": "07:30",
+          "tags": ["oatmeal", "berries", "healthy", "vegetarian"],
+          "protein_grams": 12,
+          "calories": 350,
+          "notes": "Steel-cut oats with fresh blueberries and almonds"
+        },
+        "lunch": {
+          "meal_time": "12:15",
+          "tags": ["quinoa", "salad", "vegetables", "plant-based"],
+          "protein_grams": 18,
+          "calories": 420,
+          "notes": "Rainbow quinoa salad with roasted vegetables"
+        },
+        "dinner": {
+          "meal_time": "19:00",
+          "tags": ["tofu", "stir-fry", "asian", "low-carb"],
+          "protein_grams": 25,
+          "calories": 380,
+          "notes": "Teriyaki tofu with broccoli and bell peppers"
+        }
+          },
+        "tuesday": {
+          "breakfast": {
+            "suggested_search": "green smoothie bowl spinach banana",
+            "meal_time": "07:45",
+            "tags": ["smoothie", "green", "healthy", "quick"],
+            "protein_grams": 15,
+            "calories": 280,
+            "notes": "Green smoothie bowl with spinach, banana, and chia seeds"
+          },
+          "lunch": {
+            "suggested_search": "veggie burger sweet potato fries",
+            "meal_time": "12:30",
+            "tags": ["burger", "vegetarian", "comfort", "indulgent"],
+            "protein_grams": 22,
+            "calories": 620,
+            "notes": "Black bean burger with sweet potato fries (cheat meal)"
+          },
+          "dinner": {
+            "suggested_search": "caprese salad mozzarella tomato",
+            "meal_time": "19:15",
+            "tags": ["caprese", "italian", "light", "fresh"],
+            "protein_grams": 20,
+            "calories": 380,
+            "notes": "Fresh caprese salad with basil and balsamic drizzle"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "suggested_search": "chia pudding overnight oats fruit",
+            "meal_time": "07:30",
+            "tags": ["chia", "pudding", "healthy", "prep-ahead"],
+            "protein_grams": 10,
+            "calories": 320,
+            "notes": "Overnight chia pudding with mango and coconut"
+          },
+          "lunch": {
+            "suggested_search": "buddha bowl roasted vegetables",
+            "meal_time": "12:00",
+            "tags": ["buddha-bowl", "roasted", "vegetables", "healthy"],
+            "protein_grams": 16,
+            "calories": 450,
+            "notes": "Buddha bowl with roasted veggies and tahini dressing"
+          },
+          "dinner": {
+            "suggested_search": "vegetable curry rice coconut",
+            "meal_time": "19:30",
+            "tags": ["curry", "indian", "coconut", "comfort"],
+            "protein_grams": 12,
+            "calories": 480,
+            "notes": "Coconut vegetable curry with jasmine rice"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "suggested_search": "acai bowl granola berries",
+            "meal_time": "07:40",
+            "tags": ["acai", "bowl", "trendy", "antioxidants"],
+            "protein_grams": 8,
+            "calories": 340,
+            "notes": "Acai bowl with granola, berries, and honey"
+          },
+          "lunch": {
+            "suggested_search": "grilled cheese sandwich tomato soup",
+            "meal_time": "12:45",
+            "tags": ["grilled-cheese", "comfort", "indulgent", "nostalgia"],
+            "protein_grams": 18,
+            "calories": 580,
+            "notes": "Comfort food day: grilled cheese with tomato soup"
+          },
+          "dinner": {
+            "suggested_search": "stuffed bell peppers quinoa",
+            "meal_time": "19:00",
+            "tags": ["stuffed-peppers", "quinoa", "healthy", "colorful"],
+            "protein_grams": 14,
+            "calories": 420,
+            "notes": "Bell peppers stuffed with quinoa and vegetables"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "suggested_search": "french toast berries syrup",
+            "meal_time": "08:30",
+            "tags": ["french-toast", "indulgent", "weekend", "treat"],
+            "protein_grams": 12,
+            "calories": 520,
+            "notes": "Friday treat: French toast with berries and maple syrup"
+          },
+          "lunch": {
+            "suggested_search": "mediterranean wrap hummus feta",
+            "meal_time": "13:00",
+            "tags": ["wrap", "mediterranean", "portable", "fresh"],
+            "protein_grams": 20,
+            "calories": 480,
+            "notes": "Mediterranean wrap with hummus, feta, and vegetables"
+          },
+          "dinner": {
+            "suggested_search": "margherita pizza wood fired",
+            "meal_time": "20:00",
+            "tags": ["pizza", "italian", "indulgent", "social"],
+            "protein_grams": 25,
+            "calories": 680,
+            "notes": "Friday night pizza: Margherita with fresh basil"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "suggested_search": "pancakes blueberries butter syrup",
+            "meal_time": "09:00",
+            "tags": ["pancakes", "weekend", "indulgent", "comfort"],
+            "protein_grams": 10,
+            "calories": 620,
+            "notes": "Weekend indulgence: Blueberry pancakes with butter and syrup"
+          },
+          "lunch": {
+            "suggested_search": "avocado toast poached egg",
+            "meal_time": "13:30",
+            "tags": ["avocado-toast", "trendy", "healthy", "instagram"],
+            "protein_grams": 18,
+            "calories": 420,
+            "notes": "Instagram-worthy avocado toast with poached egg"
+          },
+          "dinner": {
+            "suggested_search": "eggplant parmesan pasta",
+            "meal_time": "19:30",
+            "tags": ["eggplant", "parmesan", "italian", "comfort"],
+            "protein_grams": 22,
+            "calories": 580,
+            "notes": "Eggplant parmesan with angel hair pasta"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "suggested_search": "eggs benedict hollandaise english muffin",
+            "meal_time": "10:00",
+            "tags": ["eggs-benedict", "brunch", "indulgent", "weekend"],
+            "protein_grams": 24,
+            "calories": 740,
+            "notes": "Sunday brunch: Eggs Benedict with spinach"
+          },
+          "lunch": {
+            "suggested_search": "greek salad feta olives",
+            "meal_time": "14:00",
+            "tags": ["greek-salad", "mediterranean", "fresh", "light"],
+            "protein_grams": 12,
+            "calories": 380,
+            "notes": "Greek salad with feta, olives, and cucumber"
+          },
+          "dinner": {
+            "suggested_search": "ratatouille french vegetable stew",
+            "meal_time": "19:00",
+            "tags": ["ratatouille", "french", "vegetables", "rustic"],
+            "protein_grams": 8,
+            "calories": 320,
+            "notes": "Classic French ratatouille with herbs"
+          }
+        }
+      }
+    },
+    "user2": {
+      "name": "Marcus Johnson",
+      "profile": "Athletic trainer (high-protein focus, occasional fast food)",
+      "dietary_preferences": ["high-protein", "flexible"],
+      "week_meals": {
+        "monday": {
+          "breakfast": {
+            "suggested_search": "protein scrambled eggs bacon",
+            "meal_time": "06:45",
+            "tags": ["eggs", "bacon", "protein", "keto"],
+            "protein_grams": 35,
+            "calories": 520,
+            "notes": "Three-egg scramble with turkey bacon and avocado"
+          },
+          "lunch": {
+            "suggested_search": "grilled chicken breast sweet potato",
+            "meal_time": "13:30",
+            "tags": ["chicken", "sweet-potato", "post-workout", "clean"],
+            "protein_grams": 45,
+            "calories": 580,
+            "notes": "Grilled chicken with roasted sweet potato and asparagus"
+          },
+          "dinner": {
+            "suggested_search": "salmon fillet roasted vegetables",
+            "meal_time": "18:45",
+            "tags": ["salmon", "omega-3", "roasted", "healthy"],
+            "protein_grams": 40,
+            "calories": 650,
+            "notes": "Pan-seared salmon with roasted Brussels sprouts"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "suggested_search": "protein smoothie banana peanut butter",
+            "meal_time": "07:00",
+            "tags": ["smoothie", "protein", "post-workout", "quick"],
+            "protein_grams": 30,
+            "calories": 420,
+            "notes": "Protein smoothie with banana, peanut butter, and whey"
+          },
+          "lunch": {
+            "suggested_search": "turkey sandwich whole grain",
+            "meal_time": "13:00",
+            "tags": ["sandwich", "turkey", "whole-grain", "portable"],
+            "protein_grams": 32,
+            "calories": 480,
+            "notes": "Turkey and avocado sandwich on whole grain bread"
+          },
+          "dinner": {
+            "suggested_search": "beef stir fry brown rice",
+            "meal_time": "19:00",
+            "tags": ["beef", "stir-fry", "asian", "high-protein"],
+            "protein_grams": 38,
+            "calories": 620,
+            "notes": "Lean beef stir-fry with vegetables over brown rice"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "suggested_search": "greek yogurt granola protein",
+            "meal_time": "06:50",
+            "tags": ["yogurt", "protein", "granola", "quick"],
+            "protein_grams": 25,
+            "calories": 380,
+            "notes": "Greek yogurt with granola and protein powder"
+          },
+          "lunch": {
+            "suggested_search": "tuna salad whole wheat crackers",
+            "meal_time": "13:15",
+            "tags": ["tuna", "salad", "protein", "omega-3"],
+            "protein_grams": 35,
+            "calories": 450,
+            "notes": "Tuna salad with whole wheat crackers and vegetables"
+          },
+          "dinner": {
+            "suggested_search": "grilled pork tenderloin quinoa",
+            "meal_time": "19:15",
+            "tags": ["pork", "tenderloin", "quinoa", "lean"],
+            "protein_grams": 42,
+            "calories": 580,
+            "notes": "Grilled pork tenderloin with quinoa and steamed broccoli"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "suggested_search": "egg white omelet vegetables",
+            "meal_time": "06:45",
+            "tags": ["egg-whites", "omelet", "vegetables", "low-fat"],
+            "protein_grams": 28,
+            "calories": 320,
+            "notes": "Egg white omelet with spinach, peppers, and mushrooms"
+          },
+          "lunch": {
+            "suggested_search": "mcdonalds big mac fries",
+            "meal_time": "13:45",
+            "tags": ["fast-food", "indulgent", "cheat-meal", "convenient"],
+            "protein_grams": 25,
+            "calories": 1040,
+            "notes": "Cheat meal: Big Mac, large fries, and Coke"
+          },
+          "dinner": {
+            "suggested_search": "grilled chicken salad light",
+            "meal_time": "18:30",
+            "tags": ["chicken", "salad", "light", "recovery"],
+            "protein_grams": 35,
+            "calories": 420,
+            "notes": "Light dinner after cheat lunch: Grilled chicken salad"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "suggested_search": "protein pancakes banana",
+            "meal_time": "07:30",
+            "tags": ["pancakes", "protein", "weekend", "treat"],
+            "protein_grams": 22,
+            "calories": 450,
+            "notes": "Protein pancakes with banana and sugar-free syrup"
+          },
+          "lunch": {
+            "suggested_search": "chipotle burrito bowl chicken",
+            "meal_time": "13:30",
+            "tags": ["burrito-bowl", "mexican", "fast-casual", "protein"],
+            "protein_grams": 40,
+            "calories": 680,
+            "notes": "Chipotle chicken burrito bowl with brown rice"
+          },
+          "dinner": {
+            "suggested_search": "pizza pepperoni beer",
+            "meal_time": "20:30",
+            "tags": ["pizza", "indulgent", "social", "weekend"],
+            "protein_grams": 28,
+            "calories": 850,
+            "notes": "Friday night: Pepperoni pizza and beer with friends"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "suggested_search": "bacon eggs hash browns diner",
+            "meal_time": "09:00",
+            "tags": ["bacon", "eggs", "hash-browns", "indulgent"],
+            "protein_grams": 32,
+            "calories": 780,
+            "notes": "Weekend diner breakfast: Bacon, eggs, and hash browns"
+          },
+          "lunch": {
+            "suggested_search": "subway turkey sandwich chips",
+            "meal_time": "14:00",
+            "tags": ["subway", "sandwich", "fast-food", "convenient"],
+            "protein_grams": 24,
+            "calories": 580,
+            "notes": "Quick lunch: Subway turkey sandwich with chips"
+          },
+          "dinner": {
+            "suggested_search": "bbq ribs coleslaw",
+            "meal_time": "19:00",
+            "tags": ["bbq", "ribs", "indulgent", "weekend"],
+            "protein_grams": 35,
+            "calories": 720,
+            "notes": "Weekend BBQ: Ribs with coleslaw and baked beans"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "suggested_search": "steak eggs brunch",
+            "meal_time": "10:30",
+            "tags": ["steak", "eggs", "brunch", "protein"],
+            "protein_grams": 48,
+            "calories": 680,
+            "notes": "Sunday brunch: Steak and eggs with home fries"
+          },
+          "lunch": {
+            "suggested_search": "protein shake simple",
+            "meal_time": "15:00",
+            "tags": ["protein-shake", "simple", "recovery", "light"],
+            "protein_grams": 35,
+            "calories": 280,
+            "notes": "Light lunch: Protein shake with almond milk"
+          },
+          "dinner": {
+            "suggested_search": "grilled fish vegetables clean",
+            "meal_time": "18:00",
+            "tags": ["fish", "vegetables", "clean", "prep-week"],
+            "protein_grams": 38,
+            "calories": 520,
+            "notes": "Meal prep start: Grilled fish with roasted vegetables"
+          }
+        }
+      }
+    },
+    "user3": {
+      "name": "Sofia Martinez",
+      "profile": "Busy mom (family meals, quick fixes, occasional takeout)",
+      "dietary_preferences": ["family-friendly", "mediterranean", "practical"],
+      "week_meals": {
+        "monday": {
+          "breakfast": {
+            "suggested_search": "cereal milk bowl quick",
+            "meal_time": "07:15",
+            "tags": ["cereal", "quick", "family", "convenient"],
+            "protein_grams": 8,
+            "calories": 320,
+            "notes": "Quick breakfast: Whole grain cereal with milk"
+          },
+          "lunch": {
+            "suggested_search": "peanut butter jelly sandwich",
+            "meal_time": "12:30",
+            "tags": ["pbj", "kids", "simple", "nostalgic"],
+            "protein_grams": 12,
+            "calories": 380,
+            "notes": "Simple lunch: PB&J sandwich with apple slices"
+          },
+          "dinner": {
+            "suggested_search": "spaghetti meatballs family",
+            "meal_time": "18:30",
+            "tags": ["spaghetti", "meatballs", "family", "comfort"],
+            "protein_grams": 28,
+            "calories": 620,
+            "notes": "Family dinner: Spaghetti and meatballs with garlic bread"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "suggested_search": "toast jam coffee",
+            "meal_time": "07:30",
+            "tags": ["toast", "jam", "quick", "rushed"],
+            "protein_grams": 6,
+            "calories": 280,
+            "notes": "Rushed morning: Toast with jam and coffee"
+          },
+          "lunch": {
+            "suggested_search": "greek salad feta olives",
+            "meal_time": "13:00",
+            "tags": ["greek-salad", "mediterranean", "healthy", "fresh"],
+            "protein_grams": 15,
+            "calories": 420,
+            "notes": "Greek salad with feta, olives, and pita bread"
+          },
+          "dinner": {
+            "suggested_search": "chicken nuggets fries kids",
+            "meal_time": "19:00",
+            "tags": ["nuggets", "fries", "kids", "easy"],
+            "protein_grams": 22,
+            "calories": 580,
+            "notes": "Easy dinner: Chicken nuggets and fries (kids' favorite)"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "suggested_search": "greek yogurt honey granola",
+            "meal_time": "07:20",
+            "tags": ["yogurt", "honey", "mediterranean", "healthy"],
+            "protein_grams": 18,
+            "calories": 380,
+            "notes": "Greek yogurt with honey and granola"
+          },
+          "lunch": {
+            "suggested_search": "quesadilla cheese simple",
+            "meal_time": "12:45",
+            "tags": ["quesadilla", "cheese", "quick", "comfort"],
+            "protein_grams": 20,
+            "calories": 520,
+            "notes": "Quick quesadilla with cheese and salsa"
+          },
+          "dinner": {
+            "suggested_search": "taco tuesday ground beef",
+            "meal_time": "18:45",
+            "tags": ["tacos", "ground-beef", "mexican", "family"],
+            "protein_grams": 26,
+            "calories": 480,
+            "notes": "Taco Tuesday: Ground beef tacos with all the fixings"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "suggested_search": "muffin coffee grab go",
+            "meal_time": "07:45",
+            "tags": ["muffin", "coffee", "grab-go", "rushed"],
+            "protein_grams": 5,
+            "calories": 420,
+            "notes": "Rushed morning: Blueberry muffin and coffee"
+          },
+          "lunch": {
+            "suggested_search": "pizza slice takeout",
+            "meal_time": "13:30",
+            "tags": ["pizza", "takeout", "convenient", "indulgent"],
+            "protein_grams": 18,
+            "calories": 680,
+            "notes": "Busy day: Grabbed pizza slice for lunch"
+          },
+          "dinner": {
+            "suggested_search": "frozen lasagna easy",
+            "meal_time": "19:30",
+            "tags": ["frozen", "lasagna", "convenient", "family"],
+            "protein_grams": 24,
+            "calories": 580,
+            "notes": "Easy dinner: Frozen lasagna with side salad"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "suggested_search": "pancakes syrup weekend",
+            "meal_time": "08:00",
+            "tags": ["pancakes", "syrup", "weekend", "family"],
+            "protein_grams": 12,
+            "calories": 520,
+            "notes": "Friday treat: Pancakes with syrup for the family"
+          },
+          "lunch": {
+            "suggested_search": "mcdonalds happy meal kids",
+            "meal_time": "13:00",
+            "tags": ["fast-food", "kids", "convenient", "indulgent"],
+            "protein_grams": 15,
+            "calories": 620,
+            "notes": "Kids wanted McDonald's: Happy Meal and Big Mac"
+          },
+          "dinner": {
+            "suggested_search": "dominos pizza delivery",
+            "meal_time": "20:00",
+            "tags": ["pizza", "delivery", "friday-night", "family"],
+            "protein_grams": 25,
+            "calories": 720,
+            "notes": "Friday night: Domino's pizza delivery"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "suggested_search": "french toast family breakfast",
+            "meal_time": "09:30",
+            "tags": ["french-toast", "family", "weekend", "indulgent"],
+            "protein_grams": 16,
+            "calories": 580,
+            "notes": "Weekend family breakfast: French toast with bacon"
+          },
+          "lunch": {
+            "suggested_search": "caesar salad chicken",
+            "meal_time": "14:00",
+            "tags": ["caesar", "salad", "chicken", "restaurant"],
+            "protein_grams": 28,
+            "calories": 520,
+            "notes": "Lunch out: Chicken Caesar salad"
+          },
+          "dinner": {
+            "suggested_search": "pasta arrabiata spicy",
+            "meal_time": "19:15",
+            "tags": ["pasta", "arrabiata", "spicy", "italian"],
+            "protein_grams": 16,
+            "calories": 480,
+            "notes": "Saturday night: Pasta arrabiata with parmesan"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "suggested_search": "bagel cream cheese lox",
+            "meal_time": "10:00",
+            "tags": ["bagel", "cream-cheese", "lox", "brunch"],
+            "protein_grams": 22,
+            "calories": 620,
+            "notes": "Sunday brunch: Everything bagel with lox and cream cheese"
+          },
+          "lunch": {
+            "suggested_search": "mediterranean wrap hummus",
+            "meal_time": "14:30",
+            "tags": ["wrap", "mediterranean", "hummus", "vegetables"],
+            "protein_grams": 18,
+            "calories": 450,
+            "notes": "Mediterranean wrap with hummus and vegetables"
+          },
+          "dinner": {
+            "suggested_search": "roasted chicken vegetables family",
+            "meal_time": "18:00",
+            "tags": ["roasted-chicken", "vegetables", "family", "sunday"],
+            "protein_grams": 35,
+            "calories": 520,
+            "notes": "Sunday family dinner: Roasted chicken with vegetables"
+          }
+        }
+      }
+    },
+    "user4": {
+      "name": "David Kim",
+      "profile": "College student (budget meals, dorm food, occasional splurges)",
+      "dietary_preferences": ["budget-friendly", "asian-fusion", "convenient"],
+      "week_meals": {
+        "monday": {
+          "breakfast": {
+            "suggested_search": "instant ramen egg college",
+            "meal_time": "09:30",
+            "tags": ["instant-ramen", "egg", "budget", "dorm"],
+            "protein_grams": 12,
+            "calories": 380,
+            "notes": "Dorm breakfast: Instant ramen with a cracked egg"
+          },
+          "lunch": {
+            "suggested_search": "campus cafeteria pizza",
+            "meal_time": "13:00",
+            "tags": ["cafeteria", "pizza", "campus", "convenient"],
+            "protein_grams": 20,
+            "calories": 520,
+            "notes": "Campus lunch: Cafeteria pizza and chocolate milk"
+          },
+          "dinner": {
+            "suggested_search": "korean bibimbap rice bowl",
+            "meal_time": "19:00",
+            "tags": ["bibimbap", "korean", "rice", "authentic"],
+            "protein_grams": 24,
+            "calories": 520,
+            "notes": "Korean restaurant: Bibimbap with marinated beef"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "suggested_search": "cereal dorm room milk",
+            "meal_time": "10:00",
+            "tags": ["cereal", "dorm", "quick", "budget"],
+            "protein_grams": 8,
+            "calories": 280,
+            "notes": "Quick dorm breakfast: Cereal with milk"
+          },
+          "lunch": {
+            "suggested_search": "taco bell burrito fast food",
+            "meal_time": "13:30",
+            "tags": ["taco-bell", "burrito", "fast-food", "cheap"],
+            "protein_grams": 18,
+            "calories": 680,
+            "notes": "Quick lunch: Taco Bell burrito and nachos"
+          },
+          "dinner": {
+            "suggested_search": "mac cheese box dinner",
+            "meal_time": "20:00",
+            "tags": ["mac-cheese", "box", "dorm", "comfort"],
+            "protein_grams": 12,
+            "calories": 420,
+            "notes": "Dorm dinner: Box mac and cheese with hot dogs"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "suggested_search": "pop tarts coffee student",
+            "meal_time": "09:45",
+            "tags": ["pop-tarts", "coffee", "rushed", "convenience"],
+            "protein_grams": 4,
+            "calories": 320,
+            "notes": "Rushed morning: Pop-Tarts and instant coffee"
+          },
+          "lunch": {
+            "suggested_search": "pho vietnamese noodles",
+            "meal_time": "14:00",
+            "tags": ["pho", "vietnamese", "noodles", "authentic"],
+            "protein_grams": 20,
+            "calories": 450,
+            "notes": "Vietnamese pho with beef and fresh herbs"
+          },
+          "dinner": {
+            "suggested_search": "frozen pizza dorm",
+            "meal_time": "21:00",
+            "tags": ["frozen-pizza", "dorm", "late", "convenient"],
+            "protein_grams": 22,
+            "calories": 580,
+            "notes": "Late night: Frozen pizza heated in dorm oven"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "suggested_search": "energy bar coffee",
+            "meal_time": "08:30",
+            "tags": ["energy-bar", "coffee", "grab-go", "rushed"],
+            "protein_grams": 10,
+            "calories": 280,
+            "notes": "Running late: Protein bar and coffee"
+          },
+          "lunch": {
+            "suggested_search": "chinese takeout orange chicken",
+            "meal_time": "13:15",
+            "tags": ["chinese", "takeout", "orange-chicken", "indulgent"],
+            "protein_grams": 25,
+            "calories": 720,
+            "notes": "Chinese takeout: Orange chicken with fried rice"
+          },
+          "dinner": {
+            "suggested_search": "cup noodles instant",
+            "meal_time": "22:30",
+            "tags": ["cup-noodles", "instant", "late-night", "study"],
+            "protein_grams": 8,
+            "calories": 320,
+            "notes": "Late night study fuel: Cup noodles"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "suggested_search": "breakfast burrito gas station",
+            "meal_time": "09:00",
+            "tags": ["breakfast-burrito", "gas-station", "convenient", "rushed"],
+            "protein_grams": 16,
+            "calories": 520,
+            "notes": "Grabbed gas station breakfast burrito"
+          },
+          "lunch": {
+            "suggested_search": "campus burger fries",
+            "meal_time": "13:45",
+            "tags": ["burger", "fries", "campus", "friday"],
+            "protein_grams": 28,
+            "calories": 820,
+            "notes": "Friday campus lunch: Cheeseburger and fries"
+          },
+          "dinner": {
+            "suggested_search": "korean bbq friends",
+            "meal_time": "20:30",
+            "tags": ["korean-bbq", "friends", "social", "splurge"],
+            "protein_grams": 35,
+            "calories": 680,
+            "notes": "Friday night out: Korean BBQ with friends"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "suggested_search": "ihop pancakes hangover",
+            "meal_time": "11:30",
+            "tags": ["ihop", "pancakes", "hangover", "weekend"],
+            "protein_grams": 14,
+            "calories": 720,
+            "notes": "Weekend recovery: IHOP pancakes and bacon"
+          },
+          "lunch": {
+            "suggested_search": "chipotle bowl student discount",
+            "meal_time": "15:00",
+            "tags": ["chipotle", "bowl", "student-discount", "filling"],
+            "protein_grams": 32,
+            "calories": 620,
+            "notes": "Chipotle chicken bowl (with student discount)"
+          },
+          "dinner": {
+            "suggested_search": "dominos pizza roommates",
+            "meal_time": "21:00",
+            "tags": ["pizza", "dominos", "roommates", "social"],
+            "protein_grams": 26,
+            "calories": 780,
+            "notes": "Saturday night: Domino's pizza with roommates"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "suggested_search": "congee rice porridge comfort",
+            "meal_time": "10:30",
+            "tags": ["congee", "rice-porridge", "comfort", "homesick"],
+            "protein_grams": 8,
+            "calories": 280,
+            "notes": "Comfort food: Rice congee (feeling homesick)"
+          },
+          "lunch": {
+            "suggested_search": "ramen restaurant authentic",
+            "meal_time": "14:30",
+            "tags": ["ramen", "restaurant", "authentic", "treat"],
+            "protein_grams": 22,
+            "calories": 580,
+            "notes": "Sunday treat: Authentic ramen with pork and egg"
+          },
+          "dinner": {
+            "suggested_search": "leftover chinese fried rice",
+            "meal_time": "19:00",
+            "tags": ["leftover", "fried-rice", "budget", "practical"],
+            "protein_grams": 16,
+            "calories": 420,
+            "notes": "Sunday leftovers: Yesterday's fried rice reheated"
+          }
+        }
+      }
+    },
+    "user5": {
+      "name": "Emma Thompson",
+      "profile": "Foodie and weekend cook (gourmet experiments, occasional indulgences)",
+      "dietary_preferences": ["gourmet", "seasonal", "experimental"],
+      "week_meals": {
+        "monday": {
+          "breakfast": {
+            "suggested_search": "avocado toast poached egg artisanal",
+            "meal_time": "08:30",
+            "tags": ["avocado-toast", "poached-egg", "artisanal", "trendy"],
+            "protein_grams": 18,
+            "calories": 420,
+            "notes": "Sourdough avocado toast with perfectly poached egg"
+          },
+          "lunch": {
+            "suggested_search": "quinoa Buddha bowl colorful",
+            "meal_time": "12:45",
+            "tags": ["buddha-bowl", "quinoa", "colorful", "healthy"],
+            "protein_grams": 16,
+            "calories": 480,
+            "notes": "Instagram-worthy Buddha bowl with tahini dressing"
+          },
+          "dinner": {
+            "suggested_search": "pan seared duck breast fine dining",
+            "meal_time": "20:00",
+            "tags": ["duck", "fine-dining", "plated", "gourmet"],
+            "protein_grams": 38,
+            "calories": 720,
+            "notes": "Pan-seared duck breast with cherry gastrique"
+          }
+        },
+        "tuesday": {
+          "breakfast": {
+            "suggested_search": "acai bowl gourmet toppings",
+            "meal_time": "08:45",
+            "tags": ["acai", "bowl", "gourmet", "superfood"],
+            "protein_grams": 12,
+            "calories": 380,
+            "notes": "Acai bowl with bee pollen, cacao nibs, and coconut"
+          },
+          "lunch": {
+            "suggested_search": "burrata salad heirloom tomatoes",
+            "meal_time": "13:00",
+            "tags": ["burrata", "salad", "heirloom-tomatoes", "fresh"],
+            "protein_grams": 22,
+            "calories": 520,
+            "notes": "Burrata with heirloom tomatoes and basil oil"
+          },
+          "dinner": {
+            "suggested_search": "miso glazed salmon edamame",
+            "meal_time": "19:30",
+            "tags": ["salmon", "miso", "glazed", "japanese"],
+            "protein_grams": 42,
+            "calories": 580,
+            "notes": "Miso-glazed salmon with edamame and pickled vegetables"
+          }
+        },
+        "wednesday": {
+          "breakfast": {
+            "suggested_search": "shakshuka eggs tomato middle eastern",
+            "meal_time": "08:20",
+            "tags": ["shakshuka", "eggs", "middle-eastern", "spicy"],
+            "protein_grams": 16,
+            "calories": 420,
+            "notes": "Shakshuka with farm eggs and crusty bread"
+          },
+          "lunch": {
+            "suggested_search": "poke bowl tuna avocado",
+            "meal_time": "12:30",
+            "tags": ["poke", "tuna", "hawaiian", "fresh"],
+            "protein_grams": 28,
+            "calories": 520,
+            "notes": "Ahi tuna poke bowl with brown rice and seaweed"
+          },
+          "dinner": {
+            "suggested_search": "truffle pasta mushrooms",
+            "meal_time": "20:15",
+            "tags": ["truffle", "pasta", "mushrooms", "luxury"],
+            "protein_grams": 18,
+            "calories": 680,
+            "notes": "Truffle pasta with wild mushrooms and parmesan"
+          }
+        },
+        "thursday": {
+          "breakfast": {
+            "suggested_search": "croissant butter jam french",
+            "meal_time": "09:00",
+            "tags": ["croissant", "butter", "jam", "indulgent"],
+            "protein_grams": 8,
+            "calories": 480,
+            "notes": "Indulgent morning: Buttery croissant with apricot jam"
+          },
+          "lunch": {
+            "suggested_search": "in n out burger animal style",
+            "meal_time": "13:30",
+            "tags": ["in-n-out", "burger", "animal-style", "guilty-pleasure"],
+            "protein_grams": 22,
+            "calories": 720,
+            "notes": "Guilty pleasure: In-N-Out animal style burger and fries"
+          },
+          "dinner": {
+            "suggested_search": "bone broth soup cleansing",
+            "meal_time": "18:30",
+            "tags": ["bone-broth", "soup", "cleansing", "light"],
+            "protein_grams": 12,
+            "calories": 180,
+            "notes": "Cleansing dinner: Homemade bone broth with vegetables"
+          }
+        },
+        "friday": {
+          "breakfast": {
+            "suggested_search": "eggs benedict hollandaise weekend",
+            "meal_time": "09:30",
+            "tags": ["eggs-benedict", "hollandaise", "weekend", "brunch"],
+            "protein_grams": 24,
+            "calories": 620,
+            "notes": "Friday treat: Eggs Benedict with smoked salmon"
+          },
+          "lunch": {
+            "suggested_search": "lobster roll new england",
+            "meal_time": "13:15",
+            "tags": ["lobster-roll", "seafood", "new-england", "splurge"],
+            "protein_grams": 26,
+            "calories": 580,
+            "notes": "Friday splurge: Connecticut-style lobster roll"
+          },
+          "dinner": {
+            "suggested_search": "omakase sushi chef choice",
+            "meal_time": "20:30",
+            "tags": ["omakase", "sushi", "japanese", "experience"],
+            "protein_grams": 35,
+            "calories": 680,
+            "notes": "Friday night experience: Omakase sushi dinner"
+          }
+        },
+        "saturday": {
+          "breakfast": {
+            "suggested_search": "sourdough pancakes blueberry",
+            "meal_time": "10:00",
+            "tags": ["pancakes", "sourdough", "weekend", "homemade"],
+            "protein_grams": 14,
+            "calories": 520,
+            "notes": "Weekend project: Sourdough pancakes with blueberries"
+          },
+          "lunch": {
+            "suggested_search": "farmers market sandwich artisanal",
+            "meal_time": "14:30",
+            "tags": ["sandwich", "farmers-market", "artisanal", "local"],
+            "protein_grams": 20,
+            "calories": 480,
+            "notes": "Farmers market sandwich with local ingredients"
+          },
+          "dinner": {
+            "suggested_search": "wagyu steak fine dining",
+            "meal_time": "21:00",
+            "tags": ["wagyu", "steak", "fine-dining", "splurge"],
+            "protein_grams": 45,
+            "calories": 820,
+            "notes": "Saturday splurge: Wagyu steak with truffle fries"
+          }
+        },
+        "sunday": {
+          "breakfast": {
+            "suggested_search": "brioche french toast luxurious",
+            "meal_time": "10:30",
+            "tags": ["brioche", "french-toast", "luxurious", "weekend"],
+            "protein_grams": 16,
+            "calories": 680,
+            "notes": "Luxurious Sunday: Brioche French toast with berry compote"
+          },
+          "lunch": {
+            "suggested_search": "charcuterie board cheese wine",
+            "meal_time": "15:00",
+            "tags": ["charcuterie", "cheese", "wine", "leisure"],
+            "protein_grams": 18,
+            "calories": 520,
+            "notes": "Leisurely lunch: Charcuterie board with wine"
+          },
+          "dinner": {
+            "suggested_search": "coq au vin french braised",
+            "meal_time": "19:00",
+            "tags": ["coq-au-vin", "french", "braised", "classic"],
+            "protein_grams": 32,
+            "calories": 580,
+            "notes": "Sunday cooking project: Classic coq au vin"
+          }
+        }
+      }
+    }
+  },
+  "image_requirements": {
+    "format": "JPG or PNG",
+    "min_resolution": "800x600",
+    "preferred_resolution": "1200x900",
+    "lighting": "Good natural lighting preferred",
+    "composition": "Food should be the main subject, plated attractively",
+    "background": "Clean, uncluttered backgrounds"
+  }
+}
