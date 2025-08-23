@@ -141,3 +141,6 @@ Thumbs.db
 *.model
 logs/
 temp/
+
+# Test data
+data/test_images/
