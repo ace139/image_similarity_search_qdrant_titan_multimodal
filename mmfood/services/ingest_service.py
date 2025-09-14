@@ -108,8 +108,10 @@ class IngestService:
         image_key = f"{self.config.images_prefix}{image_id}{ext}"
         vector_key = f"{self.config.embeddings_prefix}{image_id}.json"
         
-        # Upload image bytes
-        upload_bytes_to_s3(s3, self.config.bucket, image_key, image_bytes, content_type=content_type)
+        # Upload image bytes (measure time)
+        s3_img_timer = MetricsTimer()
+        with s3_img_timer:
+            upload_bytes_to_s3(s3, self.config.bucket, image_key, image_bytes, content_type=content_type)
         
         # Build metadata
         ts = to_unix_ts(meal_datetime)
@@ -133,12 +135,15 @@ class IngestService:
             "embedding": embedding
         }
         
-        # Upload complete embedding record JSON to S3
-        upload_bytes_to_s3(
-            s3, self.config.bucket, vector_key,
-            json.dumps(base_record).encode("utf-8"),
-            content_type="application/json"
-        )
+        # Upload complete embedding record JSON to S3 (measure time)
+        emb_json_bytes = json.dumps(base_record).encode("utf-8")
+        s3_emb_timer = MetricsTimer()
+        with s3_emb_timer:
+            upload_bytes_to_s3(
+                s3, self.config.bucket, vector_key,
+                emb_json_bytes,
+                content_type="application/json"
+            )
         
         # Qdrant: Prepare payload
         qdrant_payload = {
@@ -184,7 +189,10 @@ class IngestService:
             "image_key": image_key,
             "vector_key": vector_key,
             "collection": self.config.qdrant_collection_name,
-            "vector_duration_ms": vector_timer.duration_ms
+            "vector_duration_ms": vector_timer.duration_ms,
+            "s3_image_upload_ms": s3_img_timer.duration_ms,
+            "s3_embedding_upload_ms": s3_emb_timer.duration_ms,
+            "embedding_json_size_bytes": len(emb_json_bytes),
         }
         
         return success, upload_details

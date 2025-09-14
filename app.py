@@ -3,7 +3,7 @@ Multi-Modal Food Image Search Application - Refactored Version
 
 A streamlined Streamlit app for food image search using:
 - AWS Bedrock Titan Multi-Modal Embeddings
-- Claude 3.5 Sonnet for AI-generated image descriptions  
+- Claude 4 Sonnet for AI-generated image descriptions
 - Qdrant Vector Database for similarity search
 - SQLite metrics logging for performance analytics
 
@@ -50,36 +50,49 @@ def render_help_section():
     with st.expander("Help & Notes"):
         st.markdown(
             """
-            **Multi-Modal Image Similarity Search:**
-            - This app uses **Claude Vision** to generate detailed textual descriptions of your food images.
-            - These descriptions are combined with the images to create **multi-modal embeddings** using Titan Multimodal.
-            - This approach significantly improves search accuracy by capturing both visual and semantic content.
-            
-            **Configuration:**
-            - Ensure your AWS credentials are configured in your `.env` file or via environment variables.
-            - Amazon Bedrock must be enabled with access to:
-              - Titan Multimodal Embeddings model (`amazon.titan-embed-image-v1`)
-              - Claude Vision via an **inference profile**. Set `CLAUDE_VISION_MODEL_ID` to the inference profile **ID** (e.g., `us.anthropic.claude-3-5-sonnet-20241022-v2:0`) or the **ARN**. The Converse API requires an inference profile for these Anthropic models.
-              - To find the profile ID/ARN: Bedrock Console → Inference and assessment → **Cross-Region inference** → select the relevant profile (e.g., *US Anthropic Claude 3.5 Sonnet v2*) and copy its ID/ARN.
-            - Qdrant vector database configuration is loaded from your `.env` file:
-              - `QDRANT_URL`: URL of your Qdrant instance (e.g., `https://your-cluster.qdrant.tech:6333`)
-              - `QDRANT_API_KEY`: API key for authentication (if required)
-              - `QDRANT_COLLECTION_NAME`: Name of the collection to store vectors (default: `food_embeddings`)
-            
-            **Stored Objects:**
+            **Multi-Modal Image Similarity Search**
+
+            - This app uses **Claude 4 Sonnet** to produce concise textual descriptions of your food images.
+            - Descriptions are combined with images to create **multi-modal embeddings** with Amazon Titan Multimodal.
+            - Qdrant is used as the vector database for fast, filtered similarity search.
+
+            **Configuration (strict .env)**
+
+            Set the following variables in your `.env` (see `.env.example`). These are strictly required by both the app and the sanity tests — no fallbacks are used:
+
+            - `AWS_REGION`
+            - `APP_S3_BUCKET`, `APP_IMAGES_PREFIX`, `APP_EMBEDDINGS_PREFIX`
+            - `MODEL_ID`, `OUTPUT_EMBEDDING_LENGTH`
+            - `QDRANT_URL`, `QDRANT_COLLECTION_NAME`, `QDRANT_TIMEOUT`, `QDRANT_API_KEY`
+            - Optional: `AWS_PROFILE`
+
+            Amazon Bedrock access requirements:
+            - Titan Multimodal Embeddings model (`amazon.titan-embed-image-v1`)
+            - **Claude Vision inference profile**. Set `CLAUDE_VISION_MODEL_ID` to the profile **ID** (e.g., `global.anthropic.claude-sonnet-4-20250514-v1:0`) or **ARN** (e.g. `arn:aws:bedrock:us-west-2:762035899142:inference-profile/global.anthropic.claude-sonnet-4-20250514-v1:0`).
+            - To find it: Bedrock Console → Inference and assessment → Cross-Region inference → select profile → copy ID/ARN.
+
+            **Qdrant setup**
+            - The app connects to `QDRANT_URL` and ensures the target collection’s payload indexes for filtering (`user_id`, `meal_type`, `ts`).
+            - Vector size is validated against `OUTPUT_EMBEDDING_LENGTH` at runtime.
+
+            **Stored objects in S3**
             - Images: `<images_prefix>/<uuid>.<ext>`
-            - Embeddings JSON: `<embeddings_prefix>/<uuid>.json` (includes generated descriptions)
-            - Qdrant Vectors: Multi-modal embeddings indexed by image UUID with rich metadata (no 10-key limit)
-            
-            **Metrics System:**
-            - All search operations are automatically logged to a SQLite database (`rag_metrics.db`)
-            - View performance analytics, usage patterns, and error tracking in the **📊 Metrics** tab
-            - Metrics include request timing, success rates, query patterns, and user activity
-            
-            **Testing:**
-            - Note: The existing test scripts may need updates to work with Qdrant instead of S3 Vectors.
-            - Ensure your Qdrant instance is accessible and properly configured.
-            - Run `python test_metrics.py` to verify the metrics logging system.
+            - Embeddings JSON: `<embeddings_prefix>/<uuid>.json` (includes generated description and metadata)
+
+            **Metrics**
+            - All requests are logged to a local SQLite database (`rag_metrics.db`).
+            - View latency and operation breakdowns in the **📊 Metrics** tab.
+
+            **Environment sanity checks**
+            - Use `tests/env_sanity.py` to validate credentials and connectivity:
+              - Human-readable: `python tests/env_sanity.py`
+              - JSON (for CI): `python tests/env_sanity.py --json`
+              - Optional deeper checks: `--write-s3` and/or `--invoke-bedrock`
+            - Exit codes: 0 (all OK), 1 (check failed), 2 (missing/invalid env).
+
+            **Notes**
+            - The app ensures required Qdrant payload indexes automatically at runtime.
+            - Keep your `.env` in sync with `.env.example` when deploying or sharing the project.
             """
         )
 
@@ -88,42 +101,42 @@ def main():
     """Main application entry point."""
     # Configure Streamlit page
     st.set_page_config(
-        page_title="Multi-Modal Food Search", 
-        page_icon="🍽️", 
+        page_title="Multi-Modal Food Search",
+        page_icon="🍽️",
         layout="centered"
     )
-    
+
     st.title(APP_TITLE)
     st.caption(
         "🔍 **Search food images using text or images** • Powered by Qdrant Vector Database, "
-        "Bedrock Titan Multi-Modal Embeddings, and Claude 3.5 Sonnet for AI-generated image descriptions"
+        "Bedrock Titan Multi-Modal Embeddings, and Claude 4 Sonnet for AI-generated image descriptions"
     )
-    
+
     # Load configuration and validate
     config = load_config()
     _validate_required_env_vars(config)
-    
+
     # Initialize components
     initialize_session_state()
     metrics_db = MetricsDatabase()
-    
+
     # Initialize services
     ingest_service = IngestService(config, metrics_db)
     search_service = SearchService(config, metrics_db)
-    
+
     # Create main tabs
     ingest_tab, search_tab, metrics_tab = st.tabs(["Ingest", "Search", "📊 Metrics"])
-    
+
     # Render tabs using UI modules
     with ingest_tab:
         render_ingest_tab(config, ingest_service)
-    
+
     with search_tab:
         render_search_tab(config, search_service, st.session_state.session_id)
-    
+
     with metrics_tab:
         render_metrics_tab(metrics_db)
-    
+
     # Render help section
     render_help_section()
 

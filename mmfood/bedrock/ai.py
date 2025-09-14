@@ -5,6 +5,8 @@ import json
 import base64
 from typing import Optional, Tuple
 
+from io import BytesIO
+from PIL import Image
 
 # Default inference profile ID for Claude Vision (Converse API requires a profile for Anthropic models)
 DEFAULT_CLAUDE_VISION_PROFILE = os.getenv(
@@ -66,6 +68,51 @@ def _titan_mm_safe_text(text: str, max_words: int = 80) -> str:
     return " ".join(words)
 
 
+def _downscale_image_if_needed(
+    image_bytes: bytes,
+    *,
+    max_side: int = 1280,
+    max_pixels: int = 2_000_000,
+    jpeg_quality: int = 90,
+) -> bytes:
+    """Downscale the image if it exceeds limits; return possibly re-encoded JPEG bytes.
+
+    - Preserves aspect ratio
+    - Converts to RGB and outputs JPEG to keep payload small and Claude/Titan-friendly
+    - If parsing fails, returns original bytes
+    """
+    try:
+        with Image.open(BytesIO(image_bytes)) as im:
+            # Some formats may be paletted or have alpha; convert to RGB
+            if im.mode not in ("RGB", "L"):
+                im = im.convert("RGB")
+            w, h = im.size
+            if w <= 0 or h <= 0:
+                return image_bytes
+            pixels = w * h
+            scale_factors = []
+            if max(w, h) > max_side:
+                scale_factors.append(max_side / float(max(w, h)))
+            if pixels > max_pixels:
+                from math import sqrt
+                scale_factors.append((max_pixels / float(pixels)) ** 0.5)
+            if not scale_factors:
+                # No resizing needed; still re-encode to JPEG to normalize format for Bedrock Vision
+                out = BytesIO()
+                im.save(out, format="JPEG", quality=jpeg_quality, optimize=True)
+                return out.getvalue()
+            # Compute final scale (<=1)
+            scale = min(scale_factors) if scale_factors else 1.0
+            new_w = max(1, int(round(w * scale)))
+            new_h = max(1, int(round(h * scale)))
+            im = im.resize((new_w, new_h), Image.LANCZOS)
+            out = BytesIO()
+            im.save(out, format="JPEG", quality=jpeg_quality, optimize=True)
+            return out.getvalue()
+    except Exception:
+        return image_bytes
+
+
 def _safe_json_loads(s: str) -> Optional[dict]:
     try:
         return json.loads(s)
@@ -114,12 +161,17 @@ def generate_mm_embedding(
     if input_text:
         safe_text = _titan_mm_safe_text(input_text, max_words=80)
 
+    # If image bytes provided, proactively downscale to avoid Bedrock pixel limits
+    safe_image_bytes = None
+    if input_image_bytes:
+        safe_image_bytes = _downscale_image_if_needed(input_image_bytes)
+
     def _invoke(text_for_body: Optional[str]):
         body_dict = {"embeddingConfig": {"outputEmbeddingLength": output_dim}}
         if text_for_body:
             body_dict["inputText"] = text_for_body
-        if input_image_bytes:
-            body_dict["inputImage"] = base64.b64encode(input_image_bytes).decode("utf-8")
+        if safe_image_bytes:
+            body_dict["inputImage"] = base64.b64encode(safe_image_bytes).decode("utf-8")
         resp = bedrock_client.invoke_model(
             body=json.dumps(body_dict),
             modelId=model_id,
@@ -176,12 +228,15 @@ def generate_image_description(
             f"\n\nContext: meal_type={meal_data.get('meal_type','meal')}"
         )
 
+        # Downscale image to avoid pixel-limit errors, and send as JPEG bytes
+        safe_bytes = _downscale_image_if_needed(image_bytes)
+
         messages = [
             {
                 "role": "user",
                 "content": [
                     {"text": prompt_text},
-                    {"image": {"format": "jpeg", "source": {"bytes": image_bytes}}},
+                    {"image": {"format": "jpeg", "source": {"bytes": safe_bytes}}},
                 ],
             }
         ]

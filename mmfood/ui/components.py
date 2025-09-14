@@ -23,14 +23,32 @@ def show_performance_metrics(performance: Dict[str, float]):
             st.metric("Search Time", f"{performance.get('search_duration_ms', 0):.1f} ms")
 
 
-def show_ingestion_performance(embedding_duration: float, vector_duration: float):
-    """Display ingestion performance metrics."""
-    with st.expander("⚡ Ingestion Performance"):
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Embedding Generation", f"{embedding_duration:.1f} ms")
-        with col2:
-            st.metric("Vector Indexing", f"{vector_duration:.1f} ms")
+def show_ingestion_performance(description_ms=None, embedding_ms=None, s3_image_upload_ms=None, s3_embedding_upload_ms=None, vector_index_ms=None):
+    """Display ingestion performance metrics inline (non-expandable).
+
+    Parameters are optional; metrics that are None will be omitted.
+    """
+    st.markdown("### ⚡ Ingestion Performance")
+    # Build a list of (label, value) for non-null metrics in a sensible order
+    items: List[tuple[str, Optional[float]]] = [
+        ("Description Generation", description_ms),
+        ("Embedding Generation", embedding_ms),
+        ("S3 Image Upload", s3_image_upload_ms),
+        ("S3 Embedding Upload", s3_embedding_upload_ms),
+        ("Vector Indexing", vector_index_ms),
+    ]
+    # Filter out Nones
+    items = [(label, val) for (label, val) in items if val is not None]
+    if not items:
+        st.write("No ingestion performance data available.")
+        return
+    # Render in rows of 3 for compactness
+    for i in range(0, len(items), 3):
+        row = items[i:i+3]
+        cols = st.columns(len(row))
+        for col, (label, val) in zip(cols, row):
+            with col:
+                st.metric(label, f"{float(val):.1f} ms")
 
 
 def display_search_results(
