@@ -155,6 +155,7 @@ def _render_filters():
         user_id_f = st.text_input(
             "User ID (required)", value="", key="search_user_id"
         ).strip()
+        st.caption("For bulk search, use the 'Bulk Search' tab.")
 
     # Date range defaults to last 7 days
     today = datetime.now().date()
@@ -250,5 +251,6 @@ def _execute_search(
                 qdrant_client=qdrant_client,
                 qdrant_collection=config.qdrant_collection_name,
                 debug_mode=debug_mode,
-                columns=int(st.session_state.get("results_per_row", 3))
+                columns=int(st.session_state.get("results_per_row", 3)),
+                thumb_width=320,
             )

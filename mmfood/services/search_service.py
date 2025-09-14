@@ -30,7 +30,9 @@ class SearchService:
         date_range: Optional[Tuple[date, date]] = None,
         meal_types: Optional[List[str]] = None,
         top_k: int = 5,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
+        target_collection: Optional[str] = None,
+        score_threshold: Optional[float] = 0.1,
     ) -> Dict[str, Any]:
         """
         Execute a complete search operation.
@@ -71,12 +73,15 @@ class SearchService:
                     self.config.qdrant_api_key, 
                     self.config.qdrant_timeout
                 )
+
+                # Resolve collection (allow override for bulk)
+                collection_name = (target_collection or self.config.qdrant_collection_name)
                 
                 # Validate collection configuration
-                validate_collection_config(qdrant, self.config.qdrant_collection_name, self.config.output_dim)
+                validate_collection_config(qdrant, collection_name, self.config.output_dim)
                 
                 # Ensure payload indexes exist for filtering
-                ensure_payload_indexes(qdrant, self.config.qdrant_collection_name, ["user_id", "meal_type", "ts"])
+                ensure_payload_indexes(qdrant, collection_name, ["user_id", "meal_type", "ts"])
                 
                 # Create query embedding
                 with embedding_timer:
@@ -105,17 +110,17 @@ class SearchService:
                 with search_timer:
                     results = search_vectors(
                         qdrant,
-                        self.config.qdrant_collection_name,
+                        collection_name,
                         [float(x) for x in q_embedding],
                         limit=int(top_k),
                         filters=filters,
-                        score_threshold=0.1
+                        score_threshold=score_threshold
                     )
                 
                 # Log vector search operation
                 self.metrics_db.log_vector_operation(
                     operation_type="search",
-                    collection_name=self.config.qdrant_collection_name,
+                    collection_name=collection_name,
                     duration_ms=search_timer.duration_ms,
                     vector_count=len(results),
                     request_id=request_id

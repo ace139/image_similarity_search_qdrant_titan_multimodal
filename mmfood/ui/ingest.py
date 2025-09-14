@@ -21,6 +21,9 @@ from mmfood.database import MetricsDatabase, MetricsTimer
 _MAX_SIDE = 1280
 _MAX_PIXELS = 2_000_000  # ~2.0 MP
 
+# UI: limit how large the on-page preview renders after upload (in pixels)
+_PREVIEW_WIDTH = 320
+
 
 def _compute_downscale_dims(w: int, h: int, max_side: int = _MAX_SIDE, max_pixels: int = _MAX_PIXELS):
     """Compute target dimensions if downscaling is needed; returns (new_w, new_h) or (w, h)."""
@@ -120,7 +123,8 @@ def _handle_file_upload(uploaded):
 
     try:
         img = Image.open(io.BytesIO(image_bytes))
-        st.image(img, caption=f"Preview: {uploaded.name}", use_container_width=True)
+        # Render a compact preview to avoid overwhelming the layout
+        st.image(img, caption=f"Preview: {uploaded.name}", width=_PREVIEW_WIDTH)
 
         # Warn if the image will be downscaled for Bedrock limits
         try:

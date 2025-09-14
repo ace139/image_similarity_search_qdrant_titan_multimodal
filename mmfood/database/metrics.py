@@ -117,6 +117,43 @@ class MetricsDatabase:
                 )
             """)
             
+            # Bulk ingest batch runs (one row per bulk ingest session)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS bulk_ingest_runs (
+                    id TEXT PRIMARY KEY,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    collection_name TEXT,
+                    images_total INTEGER,
+                    succeeded INTEGER,
+                    failed INTEGER,
+                    duration_ms_total REAL,
+                    duration_ms_qdrant_upsert REAL,
+                    avg_description_ms REAL,
+                    avg_embedding_ms REAL,
+                    avg_s3_image_upload_ms REAL,
+                    avg_s3_embedding_upload_ms REAL,
+                    notes TEXT,
+                    error_message TEXT
+                )
+            """)
+            
+            # Bulk search requests (one row per bulk search)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS bulk_search_requests (
+                    id TEXT PRIMARY KEY,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    query_type TEXT,
+                    top_k INTEGER,
+                    score_threshold REAL,
+                    duration_ms_total REAL,
+                    duration_ms_embedding REAL,
+                    duration_ms_search REAL,
+                    results_count INTEGER,
+                    success BOOLEAN,
+                    error_message TEXT
+                )
+            """)
+            
             # Create indexes for better query performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rag_requests_timestamp ON rag_requests(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rag_requests_user_id ON rag_requests(user_id)")
@@ -401,6 +438,105 @@ class MetricsDatabase:
             ).fetchall()
             return [dict(r) for r in rows]
 
+    def log_bulk_ingest_run(self, record: Dict[str, Any]) -> str:
+        """Insert a bulk ingest run summary and return its ID."""
+        run_id = record.get("id") or str(uuid.uuid4())
+        cols = [
+            "id", "collection_name", "images_total", "succeeded", "failed",
+            "duration_ms_total", "duration_ms_qdrant_upsert",
+            "avg_description_ms", "avg_embedding_ms",
+            "avg_s3_image_upload_ms", "avg_s3_embedding_upload_ms",
+            "notes", "error_message",
+        ]
+        values = [run_id] + [record.get(k) for k in cols[1:]]
+        with self.get_connection() as conn:
+            placeholders = ",".join(["?"] * len(cols))
+            conn.execute(
+                f"INSERT INTO bulk_ingest_runs ({','.join(cols)}) VALUES ({placeholders})",
+                values,
+            )
+            conn.commit()
+        return run_id
+
+    def get_bulk_ingest_summary(self, days: int = 7) -> Dict[str, Any]:
+        with self.get_connection() as conn:
+            row = conn.execute(
+                f"""
+                SELECT
+                    COUNT(*) AS total_runs,
+                    COALESCE(SUM(images_total),0) AS total_images,
+                    COALESCE(SUM(succeeded),0) AS total_succeeded,
+                    COALESCE(SUM(failed),0) AS total_failed,
+                    AVG(duration_ms_total) AS avg_total_ms,
+                    AVG(duration_ms_qdrant_upsert) AS avg_qdrant_ms
+                FROM bulk_ingest_runs
+                WHERE timestamp >= datetime('now', '-{days} days')
+                """
+            ).fetchone()
+            return dict(row) if row else {}
+
+    def get_recent_bulk_ingest_runs(self, limit: int = 10) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT timestamp, collection_name, images_total, succeeded, failed,
+                       duration_ms_total, duration_ms_qdrant_upsert, error_message
+                FROM bulk_ingest_runs
+                ORDER BY timestamp DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def log_bulk_search_request(self, record: Dict[str, Any]) -> str:
+        req_id = record.get("id") or str(uuid.uuid4())
+        cols = [
+            "id", "query_type", "top_k", "score_threshold",
+            "duration_ms_total", "duration_ms_embedding", "duration_ms_search",
+            "results_count", "success", "error_message",
+        ]
+        values = [req_id] + [record.get(k) for k in cols[1:]]
+        with self.get_connection() as conn:
+            placeholders = ",".join(["?"] * len(cols))
+            conn.execute(
+                f"INSERT INTO bulk_search_requests ({','.join(cols)}) VALUES ({placeholders})",
+                values,
+            )
+            conn.commit()
+        return req_id
+
+    def get_bulk_search_summary(self, days: int = 7) -> Dict[str, Any]:
+        with self.get_connection() as conn:
+            row = conn.execute(
+                f"""
+                SELECT
+                    COUNT(*) AS total_requests,
+                    AVG(duration_ms_total) AS avg_total_ms,
+                    AVG(duration_ms_embedding) AS avg_embed_ms,
+                    AVG(duration_ms_search) AS avg_search_ms,
+                    AVG(results_count) AS avg_results,
+                    SUM(CASE WHEN success=1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS success_rate
+                FROM bulk_search_requests
+                WHERE timestamp >= datetime('now', '-{days} days')
+                """
+            ).fetchone()
+            return dict(row) if row else {}
+
+    def get_recent_bulk_search_errors(self, limit: int = 10) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT timestamp, query_type, error_message, duration_ms_total
+                FROM bulk_search_requests
+                WHERE success = 0
+                ORDER BY timestamp DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def cleanup_old_records(self, days_to_keep: int = 30):
         """Clean up old records to manage database size."""
         with self.get_connection() as conn:
@@ -430,6 +566,16 @@ class MetricsDatabase:
             
             conn.execute("""
                 DELETE FROM ingest_requests 
+                WHERE timestamp < datetime('now', '-{} days')
+            """.format(days_to_keep))
+
+            conn.execute("""
+                DELETE FROM bulk_ingest_runs
+                WHERE timestamp < datetime('now', '-{} days')
+            """.format(days_to_keep))
+
+            conn.execute("""
+                DELETE FROM bulk_search_requests
                 WHERE timestamp < datetime('now', '-{} days')
             """.format(days_to_keep))
             

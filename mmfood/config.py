@@ -26,6 +26,10 @@ class AppConfig:
     qdrant_collection_name: str
     qdrant_timeout: int
 
+    # Bulk-specific configuration
+    qdrant_bulk_collection_name: str
+    bulk_user_id: str
+
     claude_vision_model_id: str
 
     def missing_required(self) -> List[str]:
@@ -73,6 +77,10 @@ def load_config(env: Mapping[str, str] | None = None) -> AppConfig:
     qdrant_collection_name = env.get("QDRANT_COLLECTION_NAME", "food_embeddings")
     qdrant_timeout = int(env.get("QDRANT_TIMEOUT", "60"))
 
+    # Bulk
+    qdrant_bulk_collection_name = env.get("QDRANT_COLLECTION_NAME_BULK", "")
+    bulk_user_id = env.get("BULK_USER_ID", "999999")
+
     # Claude Vision inference profile (ID/ARN)
     claude_model = env.get("CLAUDE_VISION_MODEL_ID", DEFAULT_CLAUDE_VISION_PROFILE)
 
@@ -88,5 +96,7 @@ def load_config(env: Mapping[str, str] | None = None) -> AppConfig:
         qdrant_api_key=qdrant_api_key,
         qdrant_collection_name=qdrant_collection_name,
         qdrant_timeout=qdrant_timeout,
+        qdrant_bulk_collection_name=qdrant_bulk_collection_name,
+        bulk_user_id=bulk_user_id,
         claude_vision_model_id=claude_model,
     )

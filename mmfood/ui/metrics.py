@@ -46,7 +46,8 @@ def _render_time_period_controls(metrics_db: MetricsDatabase):
             "Time Period", 
             [1, 7, 30], 
             index=1, 
-            format_func=lambda x: f"Last {x} day{'s' if x > 1 else ''}"
+            format_func=lambda x: f"Last {x} day{'s' if x > 1 else ''}",
+            key="metrics_days",
         )
     
     with col2:
@@ -57,6 +58,8 @@ def _render_time_period_controls(metrics_db: MetricsDatabase):
             with st.spinner("Cleaning up old records..."):
                 metrics_db.cleanup_old_records(days_to_keep=30)
             st.success("Old records cleaned up!")
+
+    st.caption("Tip: For bulk-only metrics, use the 'Bulk 📊 Metrics' tab.")
     
     return days
 

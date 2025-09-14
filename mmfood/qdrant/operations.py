@@ -15,8 +15,8 @@ def upsert_vector(
     vector: List[float],
     payload: Dict[str, Any]
 ) -> bool:
-    """Insert or update a vector in the collection.
-    
+    """Insert or update a single vector in the collection.
+
     Returns True if successful.
     """
     try:
@@ -25,7 +25,7 @@ def upsert_vector(
             vector=vector,
             payload=payload
         )
-        
+
         client.upsert(
             collection_name=collection_name,
             points=[point]
@@ -33,6 +33,37 @@ def upsert_vector(
         return True
     except Exception as e:
         print(f"[qdrant] upsert_vector failed for {vector_id}: {e}")
+        return False
+
+
+def upsert_vectors_batch(
+    client: QdrantClient,
+    collection_name: str,
+    points: List[PointStruct],
+    *,
+    wait: bool = False,
+    chunk_size: int = 0,
+) -> bool:
+    """Upsert multiple points in one or more requests.
+
+    - If chunk_size <= 0, sends a single request with all points.
+    - If chunk_size > 0, splits into chunks to avoid large payloads.
+    - Returns True if all chunks succeed.
+    """
+    try:
+        if not points:
+            return True
+        if chunk_size and chunk_size > 0:
+            ok = True
+            for i in range(0, len(points), chunk_size):
+                batch = points[i:i+chunk_size]
+                client.upsert(collection_name=collection_name, points=batch, wait=wait)
+            return ok
+        else:
+            client.upsert(collection_name=collection_name, points=points, wait=wait)
+            return True
+    except Exception as e:
+        print(f"[qdrant] upsert_vectors_batch failed: {e}")
         return False
 
 

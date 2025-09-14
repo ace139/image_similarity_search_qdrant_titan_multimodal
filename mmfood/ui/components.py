@@ -58,6 +58,7 @@ def display_search_results(
     qdrant_collection: str,
     debug_mode: bool = False,
     columns: int = 3,
+    thumb_width: int = 320,
 ):
     """Display search results in a responsive grid with per-item details.
 
@@ -66,6 +67,7 @@ def display_search_results(
     - s3_client, qdrant_client, qdrant_collection: dependencies for image and cleanup
     - debug_mode: when True, shows extra fetch logs
     - columns: number of cards per row
+    - thumb_width: pixel width to render image thumbnails (compact, like ingest preview)
     """
     columns = max(1, int(columns or 3))
     cols = st.columns(columns)
@@ -82,19 +84,24 @@ def display_search_results(
             if img_bucket and img_key:
                 _display_result_image(
                     s3_client, img_bucket, img_key, vector_id,
-                    payload, qdrant_client, qdrant_collection, debug_mode
+                    payload, qdrant_client, qdrant_collection, debug_mode,
+                    thumb_width=thumb_width,
                 )
             else:
                 st.write("(no image metadata)")
 
-            # Basic metadata
-            st.write(f"Key: {vector_id}")
+            # Basic metadata (compact)
+            st.caption(f"Key: {vector_id}")
             if score is not None:
-                st.write(f"Similarity Score: {score:.4f}")
+                st.caption(f"Similarity: {score:.4f}")
 
-            # Full payload in an expander to save vertical space
-            with st.expander("Details"):
-                st.json(payload)
+            # Details in a popover to avoid layout distortion; fallback to expander
+            if hasattr(st, "popover"):
+                with st.popover("Details"):
+                    st.json(payload)
+            else:
+                with st.expander("Details", expanded=False):
+                    st.json(payload)
 
 
 def _display_result_image(
@@ -105,7 +112,9 @@ def _display_result_image(
     payload: Dict[str, Any],
     qdrant_client: Any,
     qdrant_collection: str,
-    debug_mode: bool
+    debug_mode: bool,
+    *,
+    thumb_width: int = 320,
 ):
     """Display a single result image with error handling."""
     if debug_mode:
@@ -125,11 +134,11 @@ def _display_result_image(
             img_obj = Image.open(io.BytesIO(data))
             if debug_mode:
                 st.write({"pil_format": img_obj.format, "size": img_obj.size})
-            st.image(img_obj, caption=f"{vector_id}", use_container_width=True)
+            st.image(img_obj, caption=f"{vector_id}", width=thumb_width)
         except Exception as dec_err:
             if debug_mode:
                 st.warning(f"PIL decode failed: {dec_err}")
-            st.image(data, caption=f"{vector_id}", use_container_width=True)
+            st.image(data, caption=f"{vector_id}", width=thumb_width)
             
     except Exception as fetch_err:
         if debug_mode:
@@ -148,7 +157,7 @@ def _display_result_image(
         else:
             # Fallback to a presigned URL if not a missing-object case
             _try_presigned_url_display(
-                s3_client, img_bucket, img_key, vector_id, debug_mode
+                s3_client, img_bucket, img_key, vector_id, debug_mode, thumb_width=thumb_width
             )
 
 
@@ -204,14 +213,16 @@ def _try_presigned_url_display(
     img_bucket: str,
     img_key: str,
     vector_id: str,
-    debug_mode: bool
+    debug_mode: bool,
+    *,
+    thumb_width: int = 320,
 ):
     """Try to display image using presigned URL as fallback."""
     try:
         url = presign_url(s3_client, img_bucket, img_key, expires_in=3600)
         if debug_mode:
             st.write({"presigned_url": url[:80] + "..."})
-        st.image(url, caption=f"{vector_id}", use_container_width=True)
+        st.image(url, caption=f"{vector_id}", width=thumb_width)
     except Exception as url_err:
         if debug_mode:
             st.error(f"Presigned URL display failed: {url_err}")

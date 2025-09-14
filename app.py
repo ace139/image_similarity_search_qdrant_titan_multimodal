@@ -20,7 +20,14 @@ load_dotenv(find_dotenv(), override=True)
 from mmfood.config import load_config
 from mmfood.database import MetricsDatabase
 from mmfood.services import IngestService, SearchService
-from mmfood.ui import render_ingest_tab, render_search_tab, render_metrics_tab
+from mmfood.ui import (
+    render_ingest_tab,
+    render_search_tab,
+    render_metrics_tab,
+    render_bulk_ingest_tab,
+    render_bulk_search_tab,
+    render_bulk_metrics_tab,
+)
 
 APP_TITLE = "Multi-Modal Food Image Search with AWS AI Stack"
 
@@ -125,7 +132,9 @@ def main():
     search_service = SearchService(config, metrics_db)
 
     # Create main tabs
-    ingest_tab, search_tab, metrics_tab = st.tabs(["Ingest", "Search", "📊 Metrics"])
+    ingest_tab, search_tab, metrics_tab, bulk_ingest_tab, bulk_search_tab, bulk_metrics_tab = st.tabs([
+        "Ingest", "Search", "📊 Metrics", "Bulk Ingest", "Bulk Search", "Bulk 📊 Metrics"
+    ])
 
     # Render tabs using UI modules
     with ingest_tab:
@@ -136,6 +145,15 @@ def main():
 
     with metrics_tab:
         render_metrics_tab(metrics_db)
+
+    with bulk_ingest_tab:
+        render_bulk_ingest_tab(config, ingest_service)
+
+    with bulk_search_tab:
+        render_bulk_search_tab(config, search_service, st.session_state.session_id)
+
+    with bulk_metrics_tab:
+        render_bulk_metrics_tab(metrics_db)
 
     # Render help section
     render_help_section()
