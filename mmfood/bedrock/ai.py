@@ -13,10 +13,18 @@ DEFAULT_CLAUDE_VISION_PROFILE = os.getenv(
 
 
 def _is_inference_profile_identifier(s: str) -> bool:
-    """Return True if the string looks like a Bedrock inference profile ID or ARN."""
+    """Return True if the string looks like a Bedrock inference profile ID or ARN.
+
+    Accepts IDs beginning with 'us.' (cross-region profiles) or 'global.' as seen in some
+    Bedrock console listings, and full ARNs containing ':inference-profile/'.
+    """
     if not isinstance(s, str):
         return False
-    return s.startswith("us.") or (s.startswith("arn:aws:bedrock:") and ":inference-profile/" in s)
+    return (
+        s.startswith("us.")
+        or s.startswith("global.")
+        or (s.startswith("arn:aws:bedrock:") and ":inference-profile/" in s)
+    )
 
 
 def _resolve_converse_model_id(raw_id: Optional[str]) -> str:

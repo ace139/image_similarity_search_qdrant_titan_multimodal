@@ -144,3 +144,6 @@ temp/
 
 # Test data
 data/test_images/
+
+# Metrics DB
+*.db
