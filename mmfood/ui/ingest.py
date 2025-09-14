@@ -163,15 +163,33 @@ def _render_metadata_inputs():
         "User ID (optional)", value="", key="ingest_user_id"
     ).strip()
 
+    # Flexible date/time selection
+    mode = st.radio(
+        "Date/Time mode",
+        options=["Manual", "Now"],
+        horizontal=True,
+        key="ingest_dt_mode",
+        help="Choose 'Manual' to pick any date/time, or 'Now' to stamp with the current time.",
+    )
+
     col1, col2 = st.columns(2)
-    with col1:
-        meal_date = st.date_input(
-            "Meal date", value=datetime.now().date(), key="meal_date"
-        )
-    with col2:
-        meal_time_val = st.time_input(
-            "Meal time", value=datetime.now().time(), key="meal_time"
-        )
+    now_dt = datetime.now()
+    if mode == "Now":
+        with col1:
+            st.caption(f"Meal date: {now_dt.date().isoformat()}")
+        with col2:
+            st.caption(f"Meal time: {now_dt.time().strftime('%H:%M:%S')}")
+        meal_date = now_dt.date()
+        meal_time_val = now_dt.time()
+    else:
+        with col1:
+            meal_date = st.date_input(
+                "Meal date", value=now_dt.date(), key="meal_date"
+            )
+        with col2:
+            meal_time_val = st.time_input(
+                "Meal time", value=now_dt.time(), key="meal_time"
+            )
 
     meal_type = st.selectbox(
         "Meal type",

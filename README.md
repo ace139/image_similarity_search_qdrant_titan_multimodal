@@ -1,4 +1,4 @@
-# Image Similarity Upload to S3 with Titan Multimodal Embeddings and Qdrant
+# Image Similarity Search with Titan Multimodal, Qdrant — now with Bulk Ingest/Search
 
 A simple Streamlit app to upload images, generate embeddings using Amazon Bedrock Titan Multimodal Embeddings, and store both the image and an embeddings JSON record in Amazon S3. It also inserts the embedding into a Qdrant vector database for similarity search.
 
@@ -39,10 +39,15 @@ OUTPUT_EMBEDDING_LENGTH=1024         # 256 | 384 | 1024
 # Claude Vision via Bedrock Converse requires an inference profile ID/ARN
 CLAUDE_VISION_MODEL_ID=us.anthropic.claude-3-5-sonnet-20241022-v2:0
 
-# S3 Vectors index config (provide EITHER index ARN OR (bucket + name))
-S3V_INDEX_ARN=arn:aws:s3vectors:us-east-1:123456789012:bucket/your-vector-bucket/index/your-index
-# S3V_VECTOR_BUCKET=your-vector-bucket
-# S3V_INDEX_NAME=your-index
+# Qdrant
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=
+QDRANT_COLLECTION_NAME=food_embeddings            # individual (standard) collection
+QDRANT_COLLECTION_NAME_BULK=food_embeddings_bulk  # dedicated bulk collection
+QDRANT_TIMEOUT=60
+
+# Bulk identity used in payloads for bulk uploads/search
+BULK_USER_ID=999999
 
 # Optional
 APP_DEBUG=false
@@ -122,40 +127,48 @@ streamlit run app.py
 ```
 The app runs at http://localhost:8501
 
+## App structure (tabs)
+- Ingest: single-image ingestion (describe → embed → S3 uploads → Qdrant upsert)
+- Search: text/image search in the standard collection (scoped to the individual collection)
+- 📊 Metrics: standard metrics scoped to the individual collection only (bulk excluded)
+- Bulk Ingest: multi-file ingest that batches the Qdrant upserts in one shot
+- Bulk Search: text/image search in the bulk collection
+- Bulk 📊 Metrics: bulk-only metrics scoped to the bulk collection
+
 ## How to use
 1. Prepare `.env` as shown above and ensure required IAM permissions.
-2. Launch the app and open the Ingest tab:
+2. For single ingestion: open the Ingest tab
    - Upload a food image
-   - Enter Metadata → User ID (required), meal date/time, meal type
-   - Click "Generate Description & Embedding"
-   - Click "Upload to S3" to store image/JSON and index the embedding in S3 Vectors
-3. Use the Search tab:
+   - Enter Metadata → User ID (optional), meal date/time, meal type
+   - Click "🚀 Ingest Image"
+3. For bulk ingestion: open the Bulk Ingest tab
+   - Select multiple images
+   - Optional: toggle "Skip description (faster)"
+   - Click "Start Bulk Ingest"
+   - The app uploads images + JSON to S3 and then performs a single-shot Qdrant upsert for all points
+4. For search:
+   - Use Search for the individual collection or Bulk Search for the bulk collection
    - Choose query type: Text or Image
-   - Provide search text or upload a query image
-   - Set filters: User ID (required), date range, meal types
-   - Click "Run Search" to query your S3 Vectors index
-4. Optional: set `APP_DEBUG=true` in `.env` to pre-enable extra debug info in image fetching.
+   - On Search (standard), filters are available (user/date/meal)
+   - On Bulk Search, filters are hidden by design
+5. Metrics:
+   - 📊 Metrics shows standard (individual-only) metrics — bulk activity is excluded
+   - Bulk 📊 Metrics shows only bulk activity
 
 ## S3 Object Layout
 - Images: `<images_prefix>/<uuid>.<ext>`
 - Embeddings JSON: `<embeddings_prefix>/<uuid>.json`
 
-## S3 Vectors
-- The app inserts one vector per image using the image UUID as the vector key.
-- Before inserting, the app fetches index info via `GetIndex` and validates that the index dimension matches the selected embedding length.
-- Required IAM permissions (example):
-  - `bedrock:InvokeModel`
-  - `s3:PutObject`, `s3:HeadBucket`
-  - `s3vectors:GetIndex`, `s3vectors:PutVectors` (and later `s3vectors:QueryVectors` for search)
-- Ensure your S3 Vectors bucket and index already exist. Configure them via your `.env`:
-  - `S3V_VECTOR_BUCKET=your-vector-bucket`
-  - `S3V_INDEX_NAME=your-index`
-  - or set `S3V_INDEX_ARN=arn:aws:s3vectors:REGION:ACCOUNT_ID:bucket/your-vector-bucket/index/your-index`
+## Qdrant behavior
+- One vector per image, vector id = image UUID
+- Standard (individual) collection: `QDRANT_COLLECTION_NAME`
+- Bulk collection: `QDRANT_COLLECTION_NAME_BULK`
+- Payload fields (standard): `user_id`, `meal_type`, `ts`, S3 keys/metadata, `generated_description`, lengths, region, etc.
+- Payload fields (bulk): same shape, but `user_id` is set to `BULK_USER_ID` (default `999999`) for reuse/parity. Standard metrics exclude this identity automatically.
+- Payload indexes ensured for filtering: `user_id`, `meal_type`, `ts` (no filters are used in Bulk Search UI)
 
-### Querying
-The app includes a Search tab that generates a query embedding (from text or image) and calls `s3vectors.query_vectors` with optional metadata filters.
-
-### Embeddings JSON schema (example)
+### Batch upsert (bulk)
+- Bulk Ingest collects `PointStruct` records (id, vector, payload) for all files and performs a sin### Embeddings JSON schema (example)
 ```json
 {
   "model_id": "amazon.titan-embed-image-v1",
@@ -170,6 +183,23 @@ The app includes a Search tab that generates a query embedding (from text or ima
   "timestamp": "2025-08-09T07:00:00Z"
 }
 ```
+
+## 📊 Metrics
+
+### Standard Metrics (individual-only)
+- Search Performance Summary (Total Requests, Success Rate, Avg Total, Avg Results)
+- Performance Breakdown (Avg Embedding, Avg Search)
+- Query Types
+- Search Quality KPIs: Avg Top-1 Score, Avg TopK Avg, Avg Score Min/Max
+- Latest Searches (10)
+- Performance Range
+- Top Users (excludes the bulk identity automatically)
+- Note: standard metrics exclude bulk searches and ingests.
+
+### Bulk Metrics (bulk-only)
+- Mirrors the structure above but scoped to the bulk collection
+- Latest Bulk Searches (10) and Latest Bulk Ingest Runs
+- In Bulk Ingest UI, we show both Averages and Totals for the run
 
 ## 🔐 IAM Permissions
 

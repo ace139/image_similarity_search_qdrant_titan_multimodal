@@ -14,25 +14,35 @@ def render_metrics_tab(metrics_db: MetricsDatabase):
     
     # Get metrics data
     with st.spinner("Loading metrics..."):
-        summary = metrics_db.get_metrics_summary(days=days)
+        try:
+            from mmfood.config import load_config
+            cfg = load_config()
+            individual_collection = cfg.qdrant_collection_name
+            bulk_collection = cfg.qdrant_bulk_collection_name
+        except Exception:
+            individual_collection = None
+            bulk_collection = None
+        summary = metrics_db.get_metrics_summary(days=days, collection_name=individual_collection)
         recent_errors = metrics_db.get_recent_errors(limit=5)
-        ingest_summary = metrics_db.get_ingest_summary(days=days)
-        ingest_errors = metrics_db.get_recent_ingest_errors(limit=5)
-        ingest_rows = metrics_db.get_recent_ingest_rows(limit=10)
+        # Exclude bulk ingests from standard ingest metrics
+        ingest_summary = metrics_db.get_ingest_summary(days=days, exclude_collection_name=bulk_collection)
+        ingest_errors = metrics_db.get_recent_ingest_errors(limit=5, exclude_collection_name=bulk_collection)
+        ingest_rows = metrics_db.get_recent_ingest_rows(limit=10, exclude_collection_name=bulk_collection)
     
-    # Display metrics or no data message
-    if _has_metrics_data(summary):
-        _display_metrics_dashboard(summary)
-    else:
-        st.info(f"No search metrics found for the last {days} day{'s' if days > 1 else ''}.")
+    # Split UI clearly into Search vs Ingestion metrics
+    search_tab, ingest_tab = st.tabs(["🔎 Search Metrics", "🧪 Ingestion Metrics"])
 
-    # Ingestion metrics section
-    _display_ingestion_metrics(ingest_summary, ingest_errors)
-    _display_ingestion_table(ingest_rows)
-    
-    # Display recent search errors if any
-    _display_recent_errors(recent_errors)
-    
+    with search_tab:
+        if _has_metrics_data(summary):
+            _display_metrics_dashboard(summary, days=days, metrics_db=metrics_db)
+        else:
+            st.info(f"No search metrics found for the last {days} day{'s' if days > 1 else ''}.")
+        _display_recent_errors(recent_errors)
+
+    with ingest_tab:
+        _display_ingestion_metrics(ingest_summary, ingest_errors)
+        _display_ingestion_table(ingest_rows)
+
     # Export option
     _render_export_section({"search": summary, "ingest": ingest_summary})
 
@@ -70,7 +80,7 @@ def _has_metrics_data(summary):
             summary["request_stats"].get("total_requests", 0) > 0)
 
 
-def _display_metrics_dashboard(summary):
+def _display_metrics_dashboard(summary, days=7, metrics_db: MetricsDatabase | None = None):
     """Display the main metrics dashboard."""
     # Performance Summary
     st.markdown("### 📈 Performance Summary")
@@ -84,6 +94,55 @@ def _display_metrics_dashboard(summary):
     if summary.get("query_types"):
         st.markdown("### 🔍 Query Types")
         _display_query_types(summary["query_types"])
+
+    # Search quality KPIs
+    if metrics_db is not None:
+        st.markdown("### 🎯 Search Quality (last {} days)".format(days))
+        try:
+            from mmfood.config import load_config
+            cfg = load_config()
+            individual_collection = cfg.qdrant_collection_name
+        except Exception:
+            individual_collection = None
+        kpis = metrics_db.get_search_quality_kpis(days=days, collection_name=individual_collection)
+    if kpis:
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Avg Top-1 Score", f"{(kpis.get('avg_top1_score') or 0):.3f}")
+        with c2:
+            st.metric("Avg TopK Avg", f"{(kpis.get('avg_topk_avg_score') or 0):.3f}")
+        with c3:
+            st.metric("Avg Score Min", f"{(kpis.get('avg_score_min') or 0):.3f}")
+        with c4:
+            st.metric("Avg Score Max", f"{(kpis.get('avg_score_max') or 0):.3f}")
+
+    # Latest searches table
+    st.markdown("### Latest Searches (10)")
+    try:
+        from mmfood.config import load_config
+        cfg = load_config()
+        individual_collection = cfg.qdrant_collection_name
+    except Exception:
+        individual_collection = None
+    recent_searches = metrics_db.get_recent_search_rows(limit=10, collection_name=individual_collection)
+    if recent_searches:
+        display_rows = []
+        for r in recent_searches:
+            display_rows.append({
+                "timestamp": r.get("timestamp"),
+                "request_id": r.get("request_id"),
+                "total_ms": r.get("total_duration_ms"),
+                "embed_ms": r.get("embedding_duration_ms"),
+                "search_ms": r.get("search_duration_ms"),
+                "results": r.get("results_count"),
+                "top1": r.get("top1_score"),
+                "topk_avg": r.get("topk_avg_score"),
+                "min": r.get("score_min"),
+                "max": r.get("score_max"),
+            })
+        st.dataframe(display_rows, use_container_width=True)
+    else:
+        st.write("No recent searches.")
     
     # Top users
     if summary.get("top_users"):
