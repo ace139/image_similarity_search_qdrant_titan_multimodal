@@ -2,6 +2,7 @@
 UI components for the image ingestion tab.
 """
 import io
+import uuid
 from datetime import datetime
 from typing import Optional
 
@@ -13,6 +14,7 @@ from mmfood.utils.crypto import md5_hex
 from mmfood.services import IngestService
 from mmfood.ui.components import show_ingestion_performance, display_upload_details
 from mmfood.config import AppConfig
+from mmfood.database import MetricsDatabase, MetricsTimer
 
 
 # Image constraints to align with Bedrock service safety caps (also enforced in mmfood/bedrock/ai.py)
@@ -56,20 +58,25 @@ def render_ingest_tab(config: AppConfig, ingest_service: IngestService):
     # Initialize session state for storing generated data
     _initialize_ingest_session_state()
 
-    # File uploader
-    uploaded = st.file_uploader(
-        "Select a food plate image",
-        type=["png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"],
-        key="ingest_uploader",
-        help="Upload a single image of your food plate"
-    )
+    # Arrange uploader/preview and metadata side-by-side
+    left, right = st.columns(2)
 
-    # Handle file upload
-    if uploaded is not None:
-        _handle_file_upload(uploaded)
+    with left:
+        # File uploader
+        uploaded = st.file_uploader(
+            "Select a food plate image",
+            type=["png", "jpg", "jpeg", "webp", "gif", "bmp", "tiff"],
+            key="ingest_uploader",
+            help="Upload a single image of your food plate"
+        )
 
-    # Metadata inputs
-    user_id, meal_date, meal_time_val, meal_type = _render_metadata_inputs()
+        # Handle file upload
+        if uploaded is not None:
+            _handle_file_upload(uploaded)
+
+    with right:
+        # Metadata inputs
+        user_id, meal_date, meal_time_val, meal_type = _render_metadata_inputs()
 
     # Single-step ingestion action
     st.markdown("---")
@@ -299,7 +306,7 @@ def _handle_full_ingest(
     meal_type: str,
     uploaded,
 ):
-    """End-to-end ingestion: description + embedding + S3 uploads + Qdrant index."""
+    """End-to-end ingestion: description + embedding + S3 uploads + Qdrant index, with DB logging."""
     # Validate config early
     if not config.bucket:
         st.error("S3 bucket not configured. Please check your .env file.")
@@ -311,54 +318,136 @@ def _handle_full_ingest(
         st.error("Image bytes are missing. Please upload an image first.")
         st.stop()
 
+    # Setup metrics DB and total timer
+    metrics_db = MetricsDatabase()
+    total_timer = MetricsTimer()
+    ingest_id = str(uuid.uuid4())
+
+    # Compute image characteristics
+    image_size_bytes = len(st.session_state.current_image_bytes)
+    original_w = original_h = None
+    resized_w = resized_h = None
+    resized_applied = False
+    try:
+        img = Image.open(io.BytesIO(st.session_state.current_image_bytes))
+        original_w, original_h = img.size
+        # Compute would-be downscale based on the same guardrails used elsewhere
+        new_w, new_h = _compute_downscale_dims(original_w, original_h)
+        if (new_w, new_h) != (original_w, original_h):
+            resized_applied = True
+            resized_w, resized_h = new_w, new_h
+    except Exception:
+        pass
+
+    error_step = None
+    error_message = None
+    description_ms = embedding_ms = None
+    s3_img_ms = s3_emb_ms = vector_ms = None
+    image_id = None
+    emb_json_size = None
+
     with st.spinner("Ingesting image: describe → embed → upload → index..."):
         try:
-            # 1) Generate description + embedding
-            meal_data = {
-                'meal_type': meal_type,
-                'tags': [],
-                'protein_grams': 0,
-            }
-            (display_text, embedding, desc_ms, embed_ms) = ingest_service.generate_description_and_embedding(
-                st.session_state.current_image_bytes, meal_data
+            with total_timer:
+                # 1) Generate description + embedding
+                meal_data = {
+                    'meal_type': meal_type,
+                    'tags': [],
+                    'protein_grams': 0,
+                }
+                try:
+                    (display_text, embedding, desc_ms, embed_ms) = ingest_service.generate_description_and_embedding(
+                        st.session_state.current_image_bytes, meal_data
+                    )
+                    description_ms, embedding_ms = desc_ms, embed_ms
+                except Exception as e:
+                    error_step = "describe_image" if "converse" in str(e).lower() else "generate_embedding"
+                    error_message = str(e)
+                    raise
+
+                # 2) Upload to S3 and index in Qdrant
+                meal_dt = datetime.combine(meal_date, meal_time_val)
+                content_type = getattr(uploaded, "type", None)
+                try:
+                    success, upload_details = ingest_service.upload_to_s3_and_index(
+                        image_bytes=st.session_state.current_image_bytes,
+                        image_filename=st.session_state.current_image_name,
+                        content_type=content_type,
+                        embedding=embedding,
+                        description=display_text,
+                        user_id=(user_id or "demo"),
+                        meal_datetime=meal_dt,
+                        meal_type=meal_type,
+                    )
+                    image_id = upload_details.get("image_id")
+                    vector_ms = upload_details.get("vector_duration_ms")
+                    s3_img_ms = upload_details.get("s3_image_upload_ms")
+                    s3_emb_ms = upload_details.get("s3_embedding_upload_ms")
+                    emb_json_size = upload_details.get("embedding_json_size_bytes")
+                    if not success:
+                        error_step = "qdrant_upsert"
+                        error_message = "Vector upsert reported failure"
+                        raise RuntimeError(error_message)
+                except Exception as e:
+                    if error_step is None:
+                        # try to infer whether S3 or Qdrant stage failed
+                        msg = str(e).lower()
+                        if "put_object" in msg or "s3" in msg:
+                            error_step = "upload_s3_image" if s3_img_ms is None else "upload_s3_embedding"
+                        elif "qdrant" in msg or "upsert" in msg:
+                            error_step = "qdrant_upsert"
+                        else:
+                            error_step = "validate_index"
+                        error_message = str(e)
+                    raise
+
+            # If we got here, success
+            st.markdown("**Generated Description:**")
+            st.info(display_text)
+            display_upload_details(upload_details)
+            show_ingestion_performance(
+                description_ms=description_ms,
+                embedding_ms=embedding_ms,
+                s3_image_upload_ms=s3_img_ms,
+                s3_embedding_upload_ms=s3_emb_ms,
+                vector_index_ms=vector_ms,
             )
-
-            # 2) Upload to S3 and index in Qdrant
-            meal_dt = datetime.combine(meal_date, meal_time_val)
-            content_type = getattr(uploaded, "type", None)
-            success, upload_details = ingest_service.upload_to_s3_and_index(
-                image_bytes=st.session_state.current_image_bytes,
-                image_filename=st.session_state.current_image_name,
-                content_type=content_type,
-                embedding=embedding,
-                description=display_text,
-                user_id=(user_id or "demo"),
-                meal_datetime=meal_dt,
-                meal_type=meal_type,
-            )
-
-            if success:
-                # Display generated content summary
-                st.markdown("**Generated Description:**")
-                st.info(display_text)
-
-                display_upload_details(upload_details)
-
-                # Show ingestion performance metrics (now includes S3 upload timings)
-                show_ingestion_performance(
-                    description_ms=desc_ms,
-                    embedding_ms=embed_ms,
-                    s3_image_upload_ms=upload_details.get("s3_image_upload_ms"),
-                    s3_embedding_upload_ms=upload_details.get("s3_embedding_upload_ms"),
-                    vector_index_ms=upload_details.get("vector_duration_ms"),
-                )
-
-                # Clear session state
-                _clear_session_state()
-            else:
-                st.error("Failed to index vector in Qdrant")
-
+            _clear_session_state()
         except (ClientError, BotoCoreError) as aws_err:
+            error_message = str(aws_err)
             st.error(f"AWS error: {aws_err}")
         except Exception as e:
+            if error_message is None:
+                error_message = str(e)
             st.error(f"Ingestion failed: {e}")
+        finally:
+            # Persist a single ingestion record
+            try:
+                metrics_db.log_ingest_record({
+                    "id": ingest_id,
+                    "image_id": image_id,
+                    "content_type": getattr(uploaded, "type", None),
+                    "model_id": config.model_id,
+                    "output_dim": config.output_dim,
+                    "qdrant_collection_name": config.qdrant_collection_name,
+                    "s3_bucket": config.bucket,
+                    "original_width": original_w,
+                    "original_height": original_h,
+                    "resized_width": resized_w,
+                    "resized_height": resized_h,
+                    "resized_applied": 1 if resized_applied else 0,
+                    "image_size_bytes": image_size_bytes,
+                    "embedding_json_size_bytes": emb_json_size,
+                    "description_ms": description_ms,
+                    "embedding_ms": embedding_ms,
+                    "s3_image_upload_ms": s3_img_ms,
+                    "s3_embedding_upload_ms": s3_emb_ms,
+                    "qdrant_upsert_ms": vector_ms,
+                    "total_duration_ms": total_timer.duration_ms,
+                    "success": 1 if (error_message is None) else 0,
+                    "error_step": error_step,
+                    "error_message": error_message,
+                })
+            except Exception as log_err:
+                # Avoid breaking the UX due to logging issues
+                print(f"[ingest_metrics] failed to log ingestion record: {log_err}")

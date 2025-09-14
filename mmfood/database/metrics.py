@@ -86,6 +86,36 @@ class MetricsDatabase:
                     request_id TEXT
                 )
             """)
+
+            # Ingestion metrics (one row per ingest operation)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS ingest_requests (
+                    id TEXT PRIMARY KEY,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    image_id TEXT,
+                    content_type TEXT,
+                    model_id TEXT,
+                    output_dim INTEGER,
+                    qdrant_collection_name TEXT,
+                    s3_bucket TEXT,
+                    original_width INTEGER,
+                    original_height INTEGER,
+                    resized_width INTEGER,
+                    resized_height INTEGER,
+                    resized_applied BOOLEAN,
+                    image_size_bytes INTEGER,
+                    embedding_json_size_bytes INTEGER,
+                    description_ms REAL,
+                    embedding_ms REAL,
+                    s3_image_upload_ms REAL,
+                    s3_embedding_upload_ms REAL,
+                    qdrant_upsert_ms REAL,
+                    total_duration_ms REAL,
+                    success BOOLEAN,
+                    error_step TEXT,
+                    error_message TEXT
+                )
+            """)
             
             # Create indexes for better query performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_rag_requests_timestamp ON rag_requests(timestamp)")
@@ -93,6 +123,9 @@ class MetricsDatabase:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_search_results_request_id ON search_results(request_id)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_embedding_operations_timestamp ON embedding_operations(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_vector_operations_timestamp ON vector_operations(timestamp)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ingest_requests_timestamp ON ingest_requests(timestamp)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ingest_success ON ingest_requests(success)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_ingest_image_id ON ingest_requests(image_id)")
 
     @contextmanager
     def get_connection(self):
@@ -270,6 +303,104 @@ class MetricsDatabase:
             
             return [dict(row) for row in errors]
 
+    # --- Ingestion metrics (demo-friendly) ---
+    def log_ingest_record(self, record: Dict[str, Any]):
+        """Insert a single ingestion record. Missing keys are stored as NULL."""
+        cols = [
+            "id", "image_id", "content_type", "model_id", "output_dim",
+            "qdrant_collection_name", "s3_bucket", "original_width", "original_height",
+            "resized_width", "resized_height", "resized_applied", "image_size_bytes",
+            "embedding_json_size_bytes", "description_ms", "embedding_ms",
+            "s3_image_upload_ms", "s3_embedding_upload_ms", "qdrant_upsert_ms",
+            "total_duration_ms", "success", "error_step", "error_message",
+        ]
+        values = [record.get(k) for k in cols]
+        placeholders = ",".join(["?"] * len(cols))
+        with self.get_connection() as conn:
+            conn.execute(
+                f"INSERT INTO ingest_requests ({','.join(cols)}) VALUES ({placeholders})",
+                values,
+            )
+            conn.commit()
+
+    def get_ingest_summary(self, days: int = 7) -> Dict[str, Any]:
+        with self.get_connection() as conn:
+            summary = conn.execute(
+                f"""
+                SELECT
+                    COUNT(*) AS total_ingests,
+                    CASE WHEN COUNT(*)>0 THEN SUM(CASE WHEN success=1 THEN 1 ELSE 0 END)*100.0/COUNT(*) ELSE 0 END AS success_rate,
+                    AVG(total_duration_ms) AS avg_total,
+                    AVG(description_ms) AS avg_description,
+                    AVG(embedding_ms) AS avg_embedding,
+                    AVG(s3_image_upload_ms) AS avg_s3_image,
+                    AVG(s3_embedding_upload_ms) AS avg_s3_embedding,
+                    AVG(qdrant_upsert_ms) AS avg_qdrant
+                FROM ingest_requests
+                WHERE timestamp >= datetime('now', '-{days} days')
+                """
+            ).fetchone()
+
+            perf = conn.execute(
+                f"""
+                SELECT MIN(total_duration_ms) AS min_total, MAX(total_duration_ms) AS max_total
+                FROM ingest_requests
+                WHERE timestamp >= datetime('now', '-{days} days') AND success = 1
+                """
+            ).fetchone()
+
+            return {
+                "period_days": days,
+                "ingest_stats": dict(summary) if summary else {},
+                "ingest_performance": dict(perf) if perf else {},
+            }
+
+    def get_recent_ingest_errors(self, limit: int = 5) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT timestamp, image_id, error_step, error_message
+                FROM ingest_requests
+                WHERE success = 0
+                ORDER BY timestamp DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def get_recent_ingest_rows(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Return the latest N ingestion rows for tabular display."""
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT 
+                    timestamp,
+                    image_id,
+                    content_type,
+                    original_width,
+                    original_height,
+                    resized_applied,
+                    resized_width,
+                    resized_height,
+                    image_size_bytes,
+                    embedding_json_size_bytes,
+                    description_ms,
+                    embedding_ms,
+                    s3_image_upload_ms,
+                    s3_embedding_upload_ms,
+                    qdrant_upsert_ms,
+                    total_duration_ms,
+                    success,
+                    error_step
+                FROM ingest_requests
+                ORDER BY timestamp DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def cleanup_old_records(self, days_to_keep: int = 30):
         """Clean up old records to manage database size."""
         with self.get_connection() as conn:
@@ -294,6 +425,11 @@ class MetricsDatabase:
             
             conn.execute("""
                 DELETE FROM vector_operations 
+                WHERE timestamp < datetime('now', '-{} days')
+            """.format(days_to_keep))
+            
+            conn.execute("""
+                DELETE FROM ingest_requests 
                 WHERE timestamp < datetime('now', '-{} days')
             """.format(days_to_keep))
             

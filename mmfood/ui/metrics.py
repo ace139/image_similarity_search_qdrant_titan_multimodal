@@ -16,18 +16,25 @@ def render_metrics_tab(metrics_db: MetricsDatabase):
     with st.spinner("Loading metrics..."):
         summary = metrics_db.get_metrics_summary(days=days)
         recent_errors = metrics_db.get_recent_errors(limit=5)
+        ingest_summary = metrics_db.get_ingest_summary(days=days)
+        ingest_errors = metrics_db.get_recent_ingest_errors(limit=5)
+        ingest_rows = metrics_db.get_recent_ingest_rows(limit=10)
     
     # Display metrics or no data message
     if _has_metrics_data(summary):
         _display_metrics_dashboard(summary)
     else:
-        st.info(f"No metrics found for the last {days} day{'s' if days > 1 else ''}. Start using the search functionality to see metrics here.")
+        st.info(f"No search metrics found for the last {days} day{'s' if days > 1 else ''}.")
+
+    # Ingestion metrics section
+    _display_ingestion_metrics(ingest_summary, ingest_errors)
+    _display_ingestion_table(ingest_rows)
     
-    # Display recent errors if any
+    # Display recent search errors if any
     _display_recent_errors(recent_errors)
     
     # Export option
-    _render_export_section(summary)
+    _render_export_section({"search": summary, "ingest": ingest_summary})
 
 
 def _render_time_period_controls(metrics_db: MetricsDatabase):
@@ -129,6 +136,87 @@ def _display_performance_range(performance):
         st.metric("Fastest Request", f"{performance.get('min_duration', 0):.1f} ms")
     with col2:
         st.metric("Slowest Request", f"{performance.get('max_duration', 0):.1f} ms")
+
+
+def _display_ingestion_metrics(ingest_summary, ingest_errors):
+    """Display ingestion metrics section."""
+    st.markdown("## 🧪 Ingestion Metrics")
+    stats = ingest_summary.get("ingest_stats") or {}
+    perf = ingest_summary.get("ingest_performance") or {}
+
+    if not stats or stats.get("total_ingests", 0) == 0:
+        st.info("No ingestion metrics for the selected period.")
+        return
+
+    # Summary
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Ingests", int(stats.get("total_ingests", 0)))
+    with col2:
+        st.metric("Success Rate", f"{stats.get('success_rate', 0):.1f}%")
+    with col3:
+        st.metric("Avg Total Time", f"{stats.get('avg_total', 0):.1f} ms")
+
+    # Step averages
+    st.markdown("### Step Breakdown (averages)")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("Description", f"{stats.get('avg_description', 0):.1f} ms")
+    with c2:
+        st.metric("Embedding", f"{stats.get('avg_embedding', 0):.1f} ms")
+    with c3:
+        st.metric("S3 Image Upload", f"{stats.get('avg_s3_image', 0):.1f} ms")
+    c4, c5 = st.columns(2)
+    with c4:
+        st.metric("S3 Embedding Upload", f"{stats.get('avg_s3_embedding', 0):.1f} ms")
+    with c5:
+        st.metric("Qdrant Upsert", f"{stats.get('avg_qdrant', 0):.1f} ms")
+
+    # Range
+    st.markdown("### Performance Range")
+    r1, r2 = st.columns(2)
+    with r1:
+        st.metric("Fastest Ingest", f"{perf.get('min_total', 0):.1f} ms")
+    with r2:
+        st.metric("Slowest Ingest", f"{perf.get('max_total', 0):.1f} ms")
+
+    # Recent errors
+    if ingest_errors:
+        st.markdown("### Recent Ingestion Errors")
+        for err in ingest_errors:
+            with st.expander(f"Error at {err['timestamp']} - Image: {err.get('image_id','?')}"):
+                st.write(f"Step: {err.get('error_step','unknown')}")
+                st.write(f"Error: {err.get('error_message','')}")
+
+
+def _display_ingestion_table(rows):
+    """Render a table with the latest ingestion rows."""
+    st.markdown("### Latest Ingestions (10)")
+    if not rows:
+        st.write("No recent ingestions.")
+        return
+    # Shape rows for display
+    display_rows = []
+    for r in rows:
+        display_rows.append({
+            "timestamp": r.get("timestamp"),
+            "image_id": r.get("image_id"),
+            "content_type": r.get("content_type"),
+            "orig_size": f"{r.get('original_width','?')}×{r.get('original_height','?')}",
+            "resized": "yes" if r.get("resized_applied") else "no",
+            "resized_size": (f"{r.get('resized_width')}×{r.get('resized_height')}" if r.get("resized_width") and r.get("resized_height") else "-"),
+            "img_bytes": r.get("image_size_bytes"),
+            "json_bytes": r.get("embedding_json_size_bytes"),
+            "desc_ms": r.get("description_ms"),
+            "embed_ms": r.get("embedding_ms"),
+            "s3_img_ms": r.get("s3_image_upload_ms"),
+            "s3_json_ms": r.get("s3_embedding_upload_ms"),
+            "qdrant_ms": r.get("qdrant_upsert_ms"),
+            "total_ms": r.get("total_duration_ms"),
+            "ok": bool(r.get("success")),
+            "err_step": r.get("error_step"),
+        })
+    st.dataframe(display_rows, use_container_width=True)
 
 
 def _display_recent_errors(recent_errors):

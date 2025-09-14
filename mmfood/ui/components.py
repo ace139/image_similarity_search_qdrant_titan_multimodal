@@ -56,33 +56,45 @@ def display_search_results(
     s3_client: Any,
     qdrant_client: Any,
     qdrant_collection: str,
-    debug_mode: bool = False
+    debug_mode: bool = False,
+    columns: int = 3,
 ):
-    """Display search results with images and metadata."""
-    for item in results:
+    """Display search results in a responsive grid with per-item details.
+
+    Parameters:
+    - results: List of Qdrant search result items
+    - s3_client, qdrant_client, qdrant_collection: dependencies for image and cleanup
+    - debug_mode: when True, shows extra fetch logs
+    - columns: number of cards per row
+    """
+    columns = max(1, int(columns or 3))
+    cols = st.columns(columns)
+
+    for idx, item in enumerate(results):
         vector_id = item.get("id")
         payload = item.get("payload", {})
         score = item.get("score")
         img_bucket = payload.get("s3_bucket")
         img_key = payload.get("s3_image_key")
-        
-        cols = st.columns([1, 2])
-        
-        with cols[0]:
+
+        with cols[idx % columns]:
+            # Image (with cleanup controls embedded by _display_result_image)
             if img_bucket and img_key:
                 _display_result_image(
-                    s3_client, img_bucket, img_key, vector_id, 
+                    s3_client, img_bucket, img_key, vector_id,
                     payload, qdrant_client, qdrant_collection, debug_mode
                 )
             else:
                 st.write("(no image metadata)")
-        
-        with cols[1]:
+
+            # Basic metadata
             st.write(f"Key: {vector_id}")
-            # Qdrant uses cosine similarity (higher is better)
             if score is not None:
                 st.write(f"Similarity Score: {score:.4f}")
-            st.json(payload)
+
+            # Full payload in an expander to save vertical space
+            with st.expander("Details"):
+                st.json(payload)
 
 
 def _display_result_image(

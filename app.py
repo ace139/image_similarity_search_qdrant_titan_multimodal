@@ -103,7 +103,7 @@ def main():
     st.set_page_config(
         page_title="Multi-Modal Food Search",
         page_icon="🍽️",
-        layout="centered"
+        layout="wide"
     )
 
     st.title(APP_TITLE)

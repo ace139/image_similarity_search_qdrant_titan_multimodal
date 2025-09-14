@@ -49,11 +49,22 @@ def render_search_tab(
             """
         )
 
-    # Debug mode checkbox
-    debug_mode = st.checkbox(
-        "Debug image fetch",
-        value=_env_bool("APP_DEBUG", False)
-    )
+    # Layout controls: debug toggle and results-per-row selector
+    left_ctrl, right_ctrl = st.columns([1, 1])
+    with left_ctrl:
+        debug_mode = st.checkbox(
+            "Debug image fetch",
+            value=_env_bool("APP_DEBUG", False)
+        )
+    with right_ctrl:
+        results_per_row = st.slider(
+            "Results per row",
+            min_value=1,
+            max_value=4,
+            value=st.session_state.get("results_per_row", 3),
+            step=1,
+            key="results_per_row"
+        )
 
     # Query input section
     query_text, query_image_bytes, query_image_filename = _render_query_inputs()
@@ -137,27 +148,34 @@ def _render_filters():
     """Render search filters section."""
     st.markdown("**Filters**")
 
-    user_id_f = st.text_input(
-        "User ID (required)", value="", key="search_user_id"
-    ).strip()
+    # Arrange filters across the row to reduce vertical space
+    c1, c2, c3, c4 = st.columns([1, 2, 1, 1])
+
+    with c1:
+        user_id_f = st.text_input(
+            "User ID (required)", value="", key="search_user_id"
+        ).strip()
 
     # Date range defaults to last 7 days
     today = datetime.now().date()
     default_start = today - timedelta(days=6)
-    date_range = st.date_input(
-        "Date range", value=(default_start, today), key="date_range"
-    )
+    with c2:
+        date_range = st.date_input(
+            "Date range", value=(default_start, today), key="date_range"
+        )
 
-    meal_types = st.multiselect(
-        "Meal types",
-        options=["breakfast", "lunch", "dinner", "snack", "other"],
-        default=[],
-        key="meal_types_filter",
-    )
+    with c3:
+        meal_types = st.multiselect(
+            "Meal types",
+            options=["breakfast", "lunch", "dinner", "snack", "other"],
+            default=[],
+            key="meal_types_filter",
+        )
 
-    top_k = st.number_input(
-        "Results to return", min_value=1, max_value=20, value=5, step=1, key="top_k"
-    )
+    with c4:
+        top_k = st.number_input(
+            "Results to return", min_value=1, max_value=20, value=5, step=1, key="top_k"
+        )
 
     return user_id_f, date_range, meal_types, top_k
 
@@ -231,5 +249,6 @@ def _execute_search(
                 s3_client=s3_client,
                 qdrant_client=qdrant_client,
                 qdrant_collection=config.qdrant_collection_name,
-                debug_mode=debug_mode
+                debug_mode=debug_mode,
+                columns=int(st.session_state.get("results_per_row", 3))
             )
