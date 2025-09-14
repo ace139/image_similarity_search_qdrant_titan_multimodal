@@ -4,11 +4,13 @@ A simple Streamlit app to upload images, generate embeddings using Amazon Bedroc
 
 ## Prerequisites
 - Python environment managed with `uv` (already set up).
-- AWS credentials configured (environment variables or `~/.aws/credentials`).
+- AWS credentials configured via environment variables (e.g., `AWS_ACCESS_KEY_ID`) or an AWS profile (by setting `AWS_PROFILE` in `.env`).
 - Proper IAM permissions (see [IAM Permissions](#-iam-permissions) section below).
-- Access to Amazon Bedrock in your chosen region and model access to `amazon.titan-embed-image-v1`.
-- An existing S3 bucket where images and embeddings will be stored.
-- An existing S3 Vectors bucket and index for similarity search.
+- Access to Amazon Bedrock in your chosen region and model access to:
+  - `amazon.titan-embed-image-v1` (Titan Multimodal Embeddings)
+  - Claude Sonnet via Bedrock Converse (set `CLAUDE_VISION_MODEL_ID` to an inference profile ID/ARN)
+- A running Qdrant vector database (local Docker or managed/cloud). The app connects via `QDRANT_URL` and ensures the target collection and payload indexes.
+- An S3 bucket where images and embedding JSON artifacts will be stored.
 
 ## Install dependencies
 ```bash
@@ -53,70 +55,81 @@ BULK_USER_ID=999999
 APP_DEBUG=false
 ```
 
-Notes:
-- For S3 Vectors, `S3V_INDEX_ARN` takes precedence. If not set, both `S3V_VECTOR_BUCKET` and `S3V_INDEX_NAME` are required.
 - `CLAUDE_VISION_MODEL_ID` must be an inference profile ID/ARN (e.g., `us.anthropic.claude-3-5-sonnet-20241022-v2:0`).
 
-## 🧪 Testing Your AWS Setup
+## 🧪 Testing Your Environment
 
-This project includes comprehensive tests to verify your AWS setup before running the main application. It's recommended to run these tests first to ensure everything works correctly.
+This project includes a Python-based sanity check script to validate your environment and infrastructure connectivity before running the main application. It uses only environment variables, mirroring the application's configuration behavior.
 
-### Quick Health Check
+- **Script**: `tests/env_sanity.py`
+- **Checks**: AWS STS, S3 access, Bedrock model availability, Qdrant health/collection configuration.
+- **Behavior**: Strict environment variable usage. If any required variable is missing or invalid, the script exits with a clear message and exit code 2.
+
+### What it Checks
+1.  **AWS tokens (STS)**: Verifies credentials by calling STS `GetCallerIdentity`.
+2.  **S3 setup**: Checks bucket access and optionally performs a write/delete test.
+3.  **Titan embedding model access (Bedrock)**: Verifies your configured model is available and optionally performs a minimal invocation.
+4.  **Qdrant accessibility**: Connects to your Qdrant endpoint, checks health, and validates the collection configuration.
+
+### Prerequisites
+The script uses the same dependencies as the main application, which should already be installed from `requirements.txt`.
+
+Ensure you have set the required environment variables in your `.env` file (see `.env.example`). The script will fail if they are missing.
+
+### Usage
+
+**Basic (read-only) check:**
 ```bash
-# Fast health check (5 seconds)
-./tests/run_tests.sh quick
+python tests/env_sanity.py
 ```
 
-### Full End-to-End Verification
+**With optional write/invoke checks:**
 ```bash
-# Complete workflow test (45 seconds)
-./tests/run_tests.sh simulation
+# Verify S3 write permissions
+python tests/env_sanity.py --write-s3
+
+# Verify Bedrock model invocation (may incur small cost)
+python tests/env_sanity.py --invoke-bedrock
 ```
+
+**JSON output for automation:**
+```bash
+python tests/env_sanity.py --json
+```
+
+### Understanding Test Results
+The script provides a clear, color-coded output indicating the status of each check (✓ for success, ✗ for failure). It exits with code 0 on success, 1 on failure, and 2 for configuration errors. For more details, see `tests/README.md`.
+
+**💡 Pro tip: Run `python tests/env_sanity.py` before launching your app to ensure everything works perfectly!**
 
 ## Module Structure
 
 ```text
-app.py                         # Streamlit UI and workflow orchestration (Ingest/Search)
+app.py                         # Main Streamlit application entry point
 mmfood/
   config.py                    # Centralized environment config loader (AppConfig)
   aws/
-    session.py                 # boto3 client/session helpers (S3, Bedrock, S3 Vectors)
+    session.py                 # Boto3 client/session helpers (S3, Bedrock)
     s3.py                      # S3 helpers (presign, uploads, key utils)
   bedrock/
     ai.py                      # Titan MM embedding + Claude Vision description
-  s3vectors/
-    utils.py                   # S3 Vectors metadata merge and orphan cleanup
+  database/
+    metrics.py                 # Metrics storage and retrieval logic
+  qdrant/
+    client.py                  # Qdrant client helpers, ensure/validate collection
+    operations.py              # Upsert/search helpers for individuals and bulk
+  services/
+    ingest_service.py          # Core logic for the ingestion workflow
+    search_service.py          # Core logic for the search workflow
+  ui/
+    components.py              # Shared Streamlit UI components
+    ingest.py                  # UI tabs for single and bulk ingestion
+    search.py                  # UI tabs for single and bulk search
+    metrics.py                 # UI tab for metrics display
   utils/
-    time.py                    # to_unix_ts
-    crypto.py                  # md5_hex
+    crypto.py                  # MD5 hashing utility
+    time.py                    # Timestamp utility
 ```
-
-### Run All Tests
-```bash
-# Comprehensive test suite (95 seconds)
-./tests/run_tests.sh all
-```
-
-### Individual Test Categories
-```bash
-./tests/run_tests.sh cli       # CLI verification
-./tests/run_tests.sh boto3     # Python SDK tests
-./tests/run_tests.sh help      # Show all options
-```
-
-### Understanding Test Results
-- ✅ **Success**: All services working correctly
-- ⚠️ **Warning**: Non-critical issues (app will still work)
-- ❌ **Error**: Critical problems that need fixing
-
-### What Gets Tested
-- ✅ AWS credentials and permissions
-- ✅ S3 bucket read/write access
-- ✅ Bedrock model availability and invocation
-- ✅ Image processing and embeddings generation
-- ✅ End-to-end similarity search workflow
-
-**💡 Pro tip: Run `./tests/run_tests.sh quick` before launching your app to ensure everything works perfectly!**
 
 ## Run the app
 ```bash
@@ -168,13 +181,18 @@ The app runs at http://localhost:8501
 - Payload indexes ensured for filtering: `user_id`, `meal_type`, `ts` (no filters are used in Bulk Search UI)
 
 ### Batch upsert (bulk)
-- Bulk Ingest collects `PointStruct` records (id, vector, payload) for all files and performs a sin### Embeddings JSON schema (example)
-```json
-{
-  "model_id": "amazon.titan-embed-image-v1",
-  "embedding_length": 1024,
-  "embedding": [0.01, -0.02, ...],
-  "s3_image_bucket": "your-bucket",
+- Bulk Ingest collects `PointStruct` records (id, vector, payload) for all files and performs a single `client.upsert(points=[...], wait=False)`
+- For very large batches, the client auto-chunks requests (e.g., 512 points per call)
+- The UI displays both average and total timings per stage (description, embedding, S3 uploads, Qdrant upsert)
+
+### Querying
+- Search tab: generates a query embedding (text or image) and searches the individual collection with optional metadata filters
+- Bulk Search tab: searches the bulk collection without filters
+
+### Qdrant setup
+- Local: `docker run -p 6333:6333 qdrant/qdrant:latest`
+- Cloud: point `QDRANT_URL` to your managed Qdrant endpoint and set `QDRANT_API_KEY` if required
+- The app ensures your target collection exists and validates vector size against `OUTPUT_EMBEDDING_LENGTH`
   "s3_image_key": "images/123e4567-e89b-12d3-a456-426614174000.png",
   "uploaded_filename": "example.png",
   "content_type": "image/png",
@@ -293,26 +311,26 @@ Create a custom inline policy with the following JSON:
 
 ### Verification
 
-After applying these permissions, run the test suite to verify everything works:
+After applying these permissions, run the environment sanity check to verify everything works. This script will test your credentials, S3 access, and Bedrock model availability.
 ```bash
-# Quick verification of all permissions
-./tests/run_tests.sh quick
+# Run the sanity check
+python tests/env_sanity.py
 
-# Full end-to-end test including S3 Vectors
-./tests/run_tests.sh simulation
+# For a deeper check, verify S3 write permissions and Bedrock model invocation
+python tests/env_sanity.py --write-s3 --invoke-bedrock
 ```
 
 ## Notes
 - Ensure Bedrock and the Titan Multimodal Embeddings model are enabled in the selected region.
 - Default model: `amazon.titan-embed-image-v1`.
 - Output embedding lengths: 256, 384, or 1024.
-- The test suite will validate all required permissions are working correctly.
+- The environment sanity check (`tests/env_sanity.py`) will validate that your setup is working correctly.
 
 ## Troubleshooting
 
 ### Quick Debugging
-1. **Run the test suite first**: `./tests/run_tests.sh quick` to identify configuration issues
-2. **Check the detailed guide**: See `tests/README.md` for comprehensive troubleshooting steps
+1. **Run the sanity check first**: `python tests/env_sanity.py` to identify configuration issues.
+2. **Check the detailed guide**: See `tests/README.md` for comprehensive troubleshooting steps.
 
 ### Common Issues
 - **AWS Errors**: Verify credentials (env vars or profile) and region settings
